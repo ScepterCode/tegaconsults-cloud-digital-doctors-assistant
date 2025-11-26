@@ -66,8 +66,18 @@ Please provide diagnostic suggestions with confidence scores and recommended act
           "Maintain medication compliance",
         ],
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("OpenAI API Error:", error);
+      
+      // Handle billing/quota errors gracefully
+      if (error.code === "insufficient_quota" || error.status === 429) {
+        return {
+          response: "I'm Dr. Tega, your AI healthcare assistant. My OpenAI API connection is temporarily unavailable due to billing issues. However, I'm still here to help! Please check your OpenAI account billing at https://platform.openai.com/account/billing/overview to ensure your payment method is up to date and you have sufficient credits. Once resolved, I'll be back to providing full AI-powered diagnostic assistance.",
+          confidence: 0.5,
+          suggestedActions: ["Check OpenAI billing", "Update payment method", "Verify API quota"]
+        };
+      }
+      
       throw new Error("Failed to get diagnosis assistance");
     }
   }
@@ -101,8 +111,17 @@ Key responsibilities:
         response: content,
         confidence: 0.9,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("OpenAI API Error:", error);
+      
+      // Handle billing/quota errors gracefully
+      if (error.code === "insufficient_quota" || error.status === 429) {
+        return {
+          response: "I'm Dr. Tega, your AI healthcare assistant. My OpenAI API connection is temporarily unavailable due to billing issues. However, I'm still here to help! Please check your OpenAI account billing at https://platform.openai.com/account/billing/overview to ensure your payment method is up to date and you have sufficient credits. Once resolved, I'll be back to providing full AI-powered responses.",
+          confidence: 0.5,
+        };
+      }
+      
       throw new Error("Failed to get medical response");
     }
   }
@@ -134,8 +153,17 @@ Key responsibilities:
         response: content,
         confidence: 0.88,
       };
-    } catch (error) {
+    } catch (error: any) {
       console.error("OpenAI API Error:", error);
+      
+      // Handle billing/quota errors gracefully
+      if (error.code === "insufficient_quota" || error.status === 429) {
+        return {
+          response: "I'm Dr. Tega, your AI healthcare assistant. My OpenAI API connection is temporarily unavailable due to billing issues. However, I'm still here to help! Please check your OpenAI account billing at https://platform.openai.com/account/billing/overview to ensure your payment method is up to date and you have sufficient credits. Once resolved, I'll be back to providing full AI-powered lab analysis.",
+          confidence: 0.5,
+        };
+      }
+      
       throw new Error("Failed to analyze lab results");
     }
   }
