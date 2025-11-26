@@ -236,3 +236,31 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
 
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
+
+// Subscriptions table for managing user subscriptions and trials
+export const subscriptions = pgTable("subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  tier: text("tier").notNull().default("free"), // "free", "pro"
+  trialStartDate: timestamp("trial_start_date").defaultNow(),
+  trialEndDate: timestamp("trial_end_date"),
+  subscriptionStartDate: timestamp("subscription_start_date"),
+  subscriptionEndDate: timestamp("subscription_end_date"),
+  billingCycle: text("billing_cycle"), // "monthly", "yearly"
+  status: text("status").notNull().default("trial"), // "trial", "active", "cancelled", "expired"
+  stripeCustomerId: text("stripe_customer_id"),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  trialStartDate: true,
+  trialEndDate: true,
+});
+
+export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
+export type Subscription = typeof subscriptions.$inferSelect;

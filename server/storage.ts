@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult, type Appointment, type InsertAppointment } from "@shared/schema";
+import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult, type Appointment, type InsertAppointment, type Subscription, type InsertSubscription } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -39,6 +39,11 @@ export interface IStorage {
   getAllAppointments(): Promise<Appointment[]>;
   updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined>;
   deleteAppointment(id: string): Promise<boolean>;
+
+  // Subscription operations
+  createSubscription(subscription: InsertSubscription): Promise<Subscription>;
+  getSubscription(userId: string): Promise<Subscription | undefined>;
+  updateSubscription(userId: string, updates: Partial<Subscription>): Promise<Subscription | undefined>;
 }
 
 interface PasswordResetToken {
@@ -53,6 +58,7 @@ export class MemStorage implements IStorage {
   private labResults: Map<string, LabResult>;
   private appointments: Map<string, Appointment>;
   private passwordResetTokens: Map<string, PasswordResetToken>;
+  private subscriptions: Map<string, Subscription>;
 
   constructor() {
     this.users = new Map();
@@ -60,6 +66,7 @@ export class MemStorage implements IStorage {
     this.labResults = new Map();
     this.appointments = new Map();
     this.passwordResetTokens = new Map();
+    this.subscriptions = new Map();
     this.seedDefaultUsers();
     this.seedDefaultPatients();
   }
