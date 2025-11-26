@@ -3,13 +3,34 @@ import { pgTable, text, varchar, integer, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Organizations table for hospitals/clinics
+export const organizations = pgTable("organizations", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phoneNumber: text("phone_number"),
+  address: text("address"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertOrganizationSchema = createInsertSchema(organizations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
+export type Organization = typeof organizations.$inferSelect;
+
 // Users table with role-based access control
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull(), // 'admin', 'doctor', 'nurse'
+  role: text("role").notNull(), // 'admin', 'doctor', 'nurse', 'patient'
   fullName: text("full_name").notNull(),
+  organizationId: varchar("organization_id"), // For staff linked to hospital
   isActive: integer("is_active").notNull().default(1), // 1 = active, 0 = inactive
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -223,6 +244,8 @@ export const appointments = pgTable("appointments", {
   reason: text("reason").notNull(),
   status: text("status").notNull().default("pending"), // "pending", "confirmed", "completed", "cancelled"
   notes: text("notes"),
+  paymentAmount: integer("payment_amount").default(1000), // ₦1000 per appointment
+  paymentStatus: text("payment_status").default("pending"), // "pending", "paid", "failed"
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -237,17 +260,18 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 
-// Subscriptions table for managing user subscriptions and trials
+// Subscriptions table for managing organization subscriptions
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().unique(),
-  tier: text("tier").notNull().default("free"), // "free", "pro"
+  organizationId: varchar("organization_id").notNull().unique(),
+  tier: text("tier").notNull().default("free"), // "free", "hospital"
   trialStartDate: timestamp("trial_start_date").defaultNow(),
   trialEndDate: timestamp("trial_end_date"),
   subscriptionStartDate: timestamp("subscription_start_date"),
   subscriptionEndDate: timestamp("subscription_end_date"),
   billingCycle: text("billing_cycle"), // "monthly", "yearly"
   status: text("status").notNull().default("trial"), // "trial", "active", "cancelled", "expired"
+  staffCount: integer("staff_count").default(0), // Number of doctors/nurses covered
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),

@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult, type Appointment, type InsertAppointment, type Subscription, type InsertSubscription } from "@shared/schema";
+import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult, type Appointment, type InsertAppointment, type Subscription, type InsertSubscription, type Organization, type InsertOrganization } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -42,8 +42,12 @@ export interface IStorage {
 
   // Subscription operations
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
-  getSubscription(userId: string): Promise<Subscription | undefined>;
-  updateSubscription(userId: string, updates: Partial<Subscription>): Promise<Subscription | undefined>;
+  getSubscriptionByOrgId(organizationId: string): Promise<Subscription | undefined>;
+  updateSubscription(organizationId: string, updates: Partial<Subscription>): Promise<Subscription | undefined>;
+
+  // Organization operations
+  createOrganization(org: InsertOrganization): Promise<Organization>;
+  getOrganization(id: string): Promise<Organization | undefined>;
 }
 
 interface PasswordResetToken {
@@ -59,6 +63,7 @@ export class MemStorage implements IStorage {
   private appointments: Map<string, Appointment>;
   private passwordResetTokens: Map<string, PasswordResetToken>;
   private subscriptions: Map<string, Subscription>;
+  private organizations: Map<string, Organization>;
 
   constructor() {
     this.users = new Map();
@@ -67,6 +72,7 @@ export class MemStorage implements IStorage {
     this.appointments = new Map();
     this.passwordResetTokens = new Map();
     this.subscriptions = new Map();
+    this.organizations = new Map();
     this.seedDefaultUsers();
     this.seedDefaultPatients();
   }
@@ -525,16 +531,16 @@ export class MemStorage implements IStorage {
       createdAt: now,
       updatedAt: now,
     };
-    this.subscriptions.set(insertSubscription.userId, subscription);
+    this.subscriptions.set(insertSubscription.organizationId, subscription);
     return subscription;
   }
 
-  async getSubscription(userId: string): Promise<Subscription | undefined> {
-    return this.subscriptions.get(userId);
+  async getSubscriptionByOrgId(organizationId: string): Promise<Subscription | undefined> {
+    return this.subscriptions.get(organizationId);
   }
 
-  async updateSubscription(userId: string, updates: Partial<Subscription>): Promise<Subscription | undefined> {
-    const subscription = this.subscriptions.get(userId);
+  async updateSubscription(organizationId: string, updates: Partial<Subscription>): Promise<Subscription | undefined> {
+    const subscription = this.subscriptions.get(organizationId);
     if (!subscription) return undefined;
 
     const updatedSubscription = {
@@ -542,8 +548,32 @@ export class MemStorage implements IStorage {
       ...updates,
       updatedAt: new Date(),
     };
-    this.subscriptions.set(userId, updatedSubscription);
+    this.subscriptions.set(organizationId, updatedSubscription);
     return updatedSubscription;
+  }
+
+  // Organization methods
+  async createOrganization(org: InsertOrganization): Promise<Organization> {
+    const id = randomUUID();
+    const now = new Date();
+    const organization: Organization = {
+      ...org,
+      id,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.organizations.set(id, organization);
+    // Auto-create subscription for new org
+    await this.createSubscription({
+      organizationId: id,
+      tier: "free",
+      status: "trial",
+    });
+    return organization;
+  }
+
+  async getOrganization(id: string): Promise<Organization | undefined> {
+    return this.organizations.get(id);
   }
 }
 
