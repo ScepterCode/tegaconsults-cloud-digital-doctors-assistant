@@ -41,7 +41,9 @@ export function ChatBot() {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+      setTimeout(() => {
+        scrollRef.current?.scrollIntoView({ behavior: "smooth" });
+      }, 0);
     }
   }, [messages]);
 
@@ -233,7 +235,7 @@ export function ChatBot() {
 
       {/* Chat Window */}
       {isOpen && (
-        <Card className="fixed bottom-6 right-6 w-96 h-[600px] flex flex-col shadow-2xl z-50 bg-white">
+        <Card className="fixed bottom-6 right-6 w-96 max-h-[85vh] flex flex-col shadow-2xl z-50 bg-white">
           {/* Header */}
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-t-lg">
             <div className="flex items-center gap-2">
@@ -252,8 +254,8 @@ export function ChatBot() {
           </CardHeader>
 
           {/* Messages Area */}
-          <ScrollArea className="flex-1 p-4 bg-gray-50">
-            <div className="space-y-4" ref={scrollRef}>
+          <ScrollArea className="flex-1 p-4 bg-gray-50 overflow-hidden">
+            <div className="space-y-4 w-full" ref={scrollRef}>
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -261,7 +263,7 @@ export function ChatBot() {
                   data-testid={`chat-message-${msg.role}-${msg.id}`}
                 >
                   <div
-                    className={`max-w-xs px-4 py-2 rounded-lg text-sm leading-relaxed ${
+                    className={`max-w-[85%] px-4 py-2 rounded-lg text-sm leading-relaxed break-words ${
                       msg.role === "user"
                         ? "bg-purple-600 text-white rounded-br-none"
                         : "bg-white text-gray-800 border border-gray-200 rounded-bl-none"
