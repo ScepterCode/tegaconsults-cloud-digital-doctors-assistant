@@ -13,6 +13,8 @@ import Patients from "@/pages/patients";
 import NewPatient from "@/pages/new-patient";
 import PatientDetail from "@/pages/patient-detail";
 import Users from "@/pages/users";
+import PatientAppointments from "@/pages/patient-appointments";
+import DoctorAppointments from "@/pages/doctor-appointments";
 import NotFound from "@/pages/not-found";
 
 function AppRoutes() {
@@ -68,6 +70,16 @@ function AppRoutes() {
               <Route path="/users">
                 <ProtectedRoute requiredRoles={["admin"]}>
                   <Users />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/appointments">
+                <ProtectedRoute requiredRoles={["patient"]}>
+                  <PatientAppointments />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/doctor/appointments">
+                <ProtectedRoute requiredRoles={["doctor"]}>
+                  <DoctorAppointments />
                 </ProtectedRoute>
               </Route>
               <Route path="/">

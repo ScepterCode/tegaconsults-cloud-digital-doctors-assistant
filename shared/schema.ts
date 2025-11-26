@@ -201,3 +201,26 @@ export const labResultAnalysisSchema = z.object({
 });
 
 export type LabResultAnalysis = z.infer<typeof labResultAnalysisSchema>;
+
+// Appointments table for booking and management
+export const appointments = pgTable("appointments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(),
+  doctorId: varchar("doctor_id").notNull(),
+  appointmentDate: timestamp("appointment_date").notNull(),
+  reason: text("reason").notNull(),
+  status: text("status").notNull().default("pending"), // "pending", "confirmed", "completed", "cancelled"
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAppointmentSchema = createInsertSchema(appointments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  status: true,
+});
+
+export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
+export type Appointment = typeof appointments.$inferSelect;

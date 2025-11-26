@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult } from "@shared/schema";
+import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult, type Appointment, type InsertAppointment } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -30,17 +30,28 @@ export interface IStorage {
   getPatientLabResults(patientId: string): Promise<LabResult[]>;
   updateLabResult(id: string, updates: Partial<LabResult>): Promise<LabResult | undefined>;
   deleteLabResult(id: string): Promise<boolean>;
+  
+  // Appointment operations
+  createAppointment(appointment: InsertAppointment): Promise<Appointment>;
+  getAppointment(id: string): Promise<Appointment | undefined>;
+  getPatientAppointments(patientId: string): Promise<Appointment[]>;
+  getDoctorAppointments(doctorId: string): Promise<Appointment[]>;
+  getAllAppointments(): Promise<Appointment[]>;
+  updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined>;
+  deleteAppointment(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private patients: Map<string, Patient>;
   private labResults: Map<string, LabResult>;
+  private appointments: Map<string, Appointment>;
 
   constructor() {
     this.users = new Map();
     this.patients = new Map();
     this.labResults = new Map();
+    this.appointments = new Map();
     this.seedDefaultUsers();
     this.seedDefaultPatients();
   }
@@ -401,6 +412,58 @@ export class MemStorage implements IStorage {
 
   async deleteLabResult(id: string): Promise<boolean> {
     return this.labResults.delete(id);
+  }
+
+  // Appointment methods
+  async createAppointment(insertAppointment: InsertAppointment): Promise<Appointment> {
+    const id = randomUUID();
+    const now = new Date();
+    const appointment: Appointment = {
+      ...insertAppointment,
+      id,
+      status: "pending",
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.appointments.set(id, appointment);
+    return appointment;
+  }
+
+  async getAppointment(id: string): Promise<Appointment | undefined> {
+    return this.appointments.get(id);
+  }
+
+  async getPatientAppointments(patientId: string): Promise<Appointment[]> {
+    return Array.from(this.appointments.values()).filter(
+      (apt) => apt.patientId === patientId
+    );
+  }
+
+  async getDoctorAppointments(doctorId: string): Promise<Appointment[]> {
+    return Array.from(this.appointments.values()).filter(
+      (apt) => apt.doctorId === doctorId
+    );
+  }
+
+  async getAllAppointments(): Promise<Appointment[]> {
+    return Array.from(this.appointments.values());
+  }
+
+  async updateAppointment(id: string, updates: Partial<Appointment>): Promise<Appointment | undefined> {
+    const appointment = this.appointments.get(id);
+    if (!appointment) return undefined;
+
+    const updatedAppointment = {
+      ...appointment,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.appointments.set(id, updatedAppointment);
+    return updatedAppointment;
+  }
+
+  async deleteAppointment(id: string): Promise<boolean> {
+    return this.appointments.delete(id);
   }
 }
 

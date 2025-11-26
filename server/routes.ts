@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertPatientSchema, type User } from "@shared/schema";
+import { loginSchema, insertPatientSchema, insertAppointmentSchema, type User } from "@shared/schema";
 import { MLHealthService } from "./ml-service";
 import { OpenAIService } from "./openai-service";
 import { z } from "zod";
@@ -312,6 +312,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         response: "I'm having trouble connecting to my AI systems. Please try again or contact support.",
         confidence: 0
       });
+    }
+  });
+
+  // Appointments - Patient booking
+  app.post("/api/appointments", async (req, res) => {
+    try {
+      const validated = insertAppointmentSchema.parse(req.body);
+      const appointment = await storage.createAppointment(validated);
+      return res.status(201).json(appointment);
+    } catch (error) {
+      return res.status(400).json({ message: "Invalid appointment data" });
+    }
+  });
+
+  app.get("/api/appointments", async (req, res) => {
+    try {
+      const appointments = await storage.getAllAppointments();
+      return res.json(appointments);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/appointments/patient/:patientId", async (req, res) => {
+    try {
+      const { patientId } = req.params;
+      const appointments = await storage.getPatientAppointments(patientId);
+      return res.json(appointments);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/appointments/doctor/:doctorId", async (req, res) => {
+    try {
+      const { doctorId } = req.params;
+      const appointments = await storage.getDoctorAppointments(doctorId);
+      return res.json(appointments);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/appointments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const appointment = await storage.updateAppointment(id, updates);
+      
+      if (!appointment) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+
+      return res.json(appointment);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/appointments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteAppointment(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Appointment not found" });
+      }
+
+      return res.json({ message: "Appointment deleted successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
     }
   });
 

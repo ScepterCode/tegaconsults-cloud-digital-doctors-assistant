@@ -5,7 +5,8 @@ import {
   Settings, 
   LogOut,
   Activity,
-  UserCog
+  UserCog,
+  Calendar
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import {
@@ -35,7 +36,7 @@ export function AppSidebar() {
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboard,
-      roles: ["admin", "doctor", "nurse"],
+      roles: ["admin", "doctor", "nurse", "patient"],
     },
     {
       title: "Patients",
@@ -48,6 +49,18 @@ export function AppSidebar() {
       url: "/patients/new",
       icon: UserPlus,
       roles: ["admin", "doctor", "nurse"],
+    },
+    {
+      title: "My Appointments",
+      url: "/appointments",
+      icon: Calendar,
+      roles: ["patient"],
+    },
+    {
+      title: "Appointments",
+      url: "/doctor/appointments",
+      icon: Calendar,
+      roles: ["doctor"],
     },
     {
       title: "User Management",
