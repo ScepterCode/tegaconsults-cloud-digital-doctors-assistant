@@ -999,6 +999,69 @@ export class MLHealthService {
   }
 
   /**
+   * Analyze laboratory results with AI-powered insights
+   */
+  static analyzeLaboratoryResult(labResult: LabResult): LabResultAnalysis {
+    const testValues = labResult.testValues ? JSON.parse(labResult.testValues) : {};
+    const normalRange = labResult.normalRange ? JSON.parse(labResult.normalRange) : {};
+
+    // Simulate AI analysis of lab values
+    const flaggedAbnormalities: any[] = [];
+    let overallStatus: "normal" | "abnormal" | "critical" = "normal";
+    let severity: "low" | "moderate" | "high" | "critical" = "low";
+
+    // Check for abnormalities
+    for (const [param, value] of Object.entries(testValues)) {
+      const range = normalRange[param];
+      if (range) {
+        const numValue = parseFloat(String(value));
+        const [min, max] = range.split("-").map((v: string) => parseFloat(v.trim()));
+
+        if (numValue < min || numValue > max) {
+          overallStatus = "abnormal";
+          severity = "moderate";
+          flaggedAbnormalities.push({
+            parameter: param,
+            value: String(value),
+            normalRange: range,
+            status: "abnormal",
+            clinicalSignificance: `${param} is outside normal range. Consider clinical evaluation.`,
+          });
+        }
+      }
+    }
+
+    // Generate disease probabilities
+    const diseaseMap: Record<string, number> = {
+      "Infection": flaggedAbnormalities.length > 0 ? 0.35 : 0.1,
+      "Chronic Disease": flaggedAbnormalities.length > 2 ? 0.5 : 0.2,
+      "Metabolic Disorder": flaggedAbnormalities.length > 0 ? 0.25 : 0.05,
+    };
+
+    return {
+      testName: labResult.testName,
+      overallStatus,
+      severity,
+      flaggedAbnormalities,
+      riskAssessment: {
+        diseaseProbability: diseaseMap,
+        acuteTreatmentNeeded: severity === "critical",
+        recommendedFollowUp: severity === "critical" 
+          ? "Urgent clinical review within 24 hours"
+          : "Follow-up appointment within 2 weeks",
+      },
+      recommendations: [
+        "Review lab results with attending physician",
+        severity === "critical" ? "Consider immediate intervention" : "Monitor condition closely",
+        "Correlate with patient symptoms and vitals",
+        "Consider repeat testing if abnormalities persist",
+      ],
+      correlationWithVitals: "Analyze these results alongside patient vital signs for comprehensive assessment",
+      historicalComparison: "Compare with previous lab results to identify trends",
+    };
+  }
+
+  /**
    * Generate comprehensive health assessment with all AI/ML capabilities
    */
   static assessPatientHealth(patient: Patient): HealthAssessment {

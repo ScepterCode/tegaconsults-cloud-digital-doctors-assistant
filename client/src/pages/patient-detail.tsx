@@ -17,6 +17,7 @@ import {
   Weight,
   Camera,
   Fingerprint,
+  FileText,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -27,8 +28,11 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
+import { LabResultsUpload } from "@/components/lab-results-upload";
+import { LabResultsDisplay } from "@/components/lab-results-display";
 import type { Patient } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
@@ -444,6 +448,32 @@ export default function PatientDetail() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Lab Results Section */}
+      {canEdit && (
+        <div className="mt-8 space-y-6">
+          <Tabs defaultValue="upload" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="upload" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Upload Lab Results
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Lab History
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="upload" className="mt-6">
+              <LabResultsUpload patientId={patientId || ""} />
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-6">
+              <LabResultsDisplay patientId={patientId || ""} />
+            </TabsContent>
+          </Tabs>
+        </div>
+      )}
     </div>
   );
 }
