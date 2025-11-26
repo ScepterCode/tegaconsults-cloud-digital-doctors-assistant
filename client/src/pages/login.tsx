@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Activity, Camera, Fingerprint, User, Lock, BarChart3, Brain, Shield, Zap, FileText, BookOpen } from "lucide-react";
+import { Camera, Fingerprint, User, Lock, BarChart3, Brain, Shield, Zap, FileText, BookOpen } from "lucide-react";
+import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,9 +146,7 @@ export default function Login() {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 pt-8 pb-12">
         {/* Logo and Title */}
         <div className="text-center mb-8 space-y-4">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white">
-            <Activity className="h-10 w-10" />
-          </div>
+          <img src={logoUrl} alt="Digital Doctors Assistant" className="mx-auto h-32 w-auto object-contain" data-testid="img-dda-logo" />
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
             Digital Doctors Assistant
           </h1>

@@ -4,10 +4,10 @@ import {
   UserPlus, 
   Settings, 
   LogOut,
-  Activity,
   UserCog,
   Calendar
 } from "lucide-react";
+import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Link, useLocation } from "wouter";
 import {
   Sidebar,
@@ -100,9 +100,7 @@ export function AppSidebar() {
     <Sidebar>
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <Activity className="h-6 w-6" />
-          </div>
+          <img src={logoUrl} alt="DDA Logo" className="h-10 w-10 object-contain" data-testid="img-sidebar-logo" />
           <div>
             <h2 className="text-lg font-semibold">DDA</h2>
             <p className="text-xs text-muted-foreground">Doctors Assistant</p>

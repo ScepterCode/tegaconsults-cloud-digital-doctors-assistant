@@ -3,7 +3,8 @@ import { useLocation, useSearch } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Activity, ArrowLeft, Lock } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
+import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,9 +106,7 @@ export default function ResetPassword() {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 via-blue-50 to-white flex items-center justify-center px-4 py-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-600 text-white mb-4">
-              <Lock className="h-6 w-6" />
-            </div>
+            <img src={logoUrl} alt="DDA Logo" className="h-10 w-10 object-contain mb-4" data-testid="img-reset-success-logo" />
             <CardTitle className="text-2xl">Password Reset Successful</CardTitle>
             <CardDescription>
               Your password has been reset. Redirecting to login...
@@ -140,9 +139,7 @@ export default function ResetPassword() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <Activity className="h-6 w-6" />
-            </div>
+            <img src={logoUrl} alt="DDA Logo" className="h-10 w-10 object-contain" data-testid="img-reset-logo" />
           </div>
           <CardTitle className="text-2xl">Reset Password</CardTitle>
           <CardDescription>

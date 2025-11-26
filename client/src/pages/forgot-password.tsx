@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Activity, ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail } from "lucide-react";
+import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,9 +69,7 @@ export default function ForgotPassword() {
       <div className="min-h-screen bg-gradient-to-b from-gray-50 via-blue-50 to-white flex items-center justify-center px-4 py-8">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white mb-4">
-              <Mail className="h-6 w-6" />
-            </div>
+            <img src={logoUrl} alt="DDA Logo" className="h-10 w-10 object-contain mb-4" data-testid="img-forgot-email-logo" />
             <CardTitle className="text-2xl">Check Your Email</CardTitle>
             <CardDescription>
               A password reset link has been sent to your registered email address. Click the link to reset your password.
@@ -106,9 +105,7 @@ export default function ForgotPassword() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <Activity className="h-6 w-6" />
-            </div>
+            <img src={logoUrl} alt="DDA Logo" className="h-10 w-10 object-contain" data-testid="img-forgot-logo" />
           </div>
           <CardTitle className="text-2xl">Forgot Password</CardTitle>
           <CardDescription>

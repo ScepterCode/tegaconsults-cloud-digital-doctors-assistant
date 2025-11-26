@@ -3,7 +3,8 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Activity, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,9 +100,7 @@ export default function Register() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white">
-              <Activity className="h-6 w-6" />
-            </div>
+            <img src={logoUrl} alt="DDA Logo" className="h-10 w-10 object-contain" data-testid="img-register-logo" />
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
           <CardDescription>
