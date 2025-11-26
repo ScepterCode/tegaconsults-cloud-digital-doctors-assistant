@@ -80,6 +80,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Forgot Password
+  app.post("/api/auth/forgot-password", async (req, res) => {
+    try {
+      const { username } = req.body;
+      
+      if (!username) {
+        return res.status(400).json({ message: "Username is required" });
+      }
+
+      const user = await storage.getUserByUsername(username);
+      
+      // Always return success to prevent username enumeration
+      if (!user) {
+        return res.json({ 
+          message: "If this username exists, a password reset link will be sent to the registered email" 
+        });
+      }
+
+      // Generate reset token (valid for 1 hour)
+      const resetToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      
+      await storage.createPasswordResetToken(user.id, resetToken, expiresAt);
+
+      // In a real app, send email with reset link
+      // For demo, return the token (in production, this would be in an email)
+      const resetLink = `${process.env.FRONTEND_URL || "http://localhost:5000"}/reset-password?token=${resetToken}`;
+      
+      console.log(`Password reset link for ${username}: ${resetLink}`);
+      
+      return res.json({ 
+        message: "A password reset link has been sent to your email",
+        // In production, remove this next line
+        resetLink: process.env.NODE_ENV === "development" ? resetLink : undefined
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Reset Password
+  app.post("/api/auth/reset-password", async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return res.status(400).json({ message: "Token and new password are required" });
+      }
+
+      const resetToken = await storage.getPasswordResetToken(token);
+      
+      if (!resetToken) {
+        return res.status(400).json({ message: "Invalid or expired reset token" });
+      }
+
+      const user = await storage.getUser(resetToken.userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Update user password
+      await storage.updateUser(resetToken.userId, { password: newPassword });
+      
+      // Delete used token
+      await storage.deletePasswordResetToken(token);
+
+      return res.json({ message: "Password has been reset successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Get all users (admin only - frontend should enforce)
   app.get("/api/users", async (req, res) => {
     try {

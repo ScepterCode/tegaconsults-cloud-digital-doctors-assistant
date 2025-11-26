@@ -480,6 +480,28 @@ export class MemStorage implements IStorage {
   async deleteAppointment(id: string): Promise<boolean> {
     return this.appointments.delete(id);
   }
+
+  // Password reset token methods
+  async createPasswordResetToken(userId: string, token: string, expiresAt: Date): Promise<void> {
+    this.passwordResetTokens.set(token, { token, userId, expiresAt });
+  }
+
+  async getPasswordResetToken(token: string): Promise<PasswordResetToken | undefined> {
+    const resetToken = this.passwordResetTokens.get(token);
+    if (!resetToken) return undefined;
+    
+    // Check if token has expired
+    if (resetToken.expiresAt < new Date()) {
+      this.passwordResetTokens.delete(token);
+      return undefined;
+    }
+    
+    return resetToken;
+  }
+
+  async deletePasswordResetToken(token: string): Promise<void> {
+    this.passwordResetTokens.delete(token);
+  }
 }
 
 export const storage = new MemStorage();
