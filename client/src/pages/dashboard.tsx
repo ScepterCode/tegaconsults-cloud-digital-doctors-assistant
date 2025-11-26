@@ -22,11 +22,11 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Patient, HealthAssessment } from "@shared/schema";
 
-type PatientStatusFilter = "all" | "new" | "last-week" | "critical" | "low-risk" | "booked" | "discharged" | "death";
+type PatientStatusFilter = "all" | "new" | "last-visit" | "critical" | "low-risk" | "booked" | "discharged" | "death";
 
 interface PatientStatus {
   isNew: boolean;
-  isLastWeek: boolean;
+  isLastVisit: boolean;
   isCritical: boolean;
   isLowRisk: boolean;
   isBooked: boolean;
@@ -136,7 +136,7 @@ export default function Dashboard() {
     
     // Simple heuristics for demo purposes
     const isNew = daysOld <= 1;
-    const isLastWeek = daysOld <= 7;
+    const isLastVisit = daysOld <= 7;
     const isCritical = (patient.bloodPressureSystolic && patient.bloodPressureSystolic > 160) || 
                        (patient.heartRate && patient.heartRate > 120);
     const isLowRisk = !isCritical && patient.temperature && parseFloat(patient.temperature) < 37.5;
@@ -144,7 +144,7 @@ export default function Dashboard() {
     const isDischarged = patient.age && patient.age > 60 && isLowRisk;
     const isDeath = false; // Placeholder
 
-    return { isNew, isLastWeek, isCritical, isLowRisk, isBooked, isDischarged, isDeath };
+    return { isNew, isLastVisit, isCritical, isLowRisk, isBooked, isDischarged, isDeath };
   };
 
   const filteredPatients = (patients || []).filter((patient) => {
@@ -154,8 +154,8 @@ export default function Dashboard() {
     switch (statusFilter) {
       case "new":
         return status.isNew;
-      case "last-week":
-        return status.isLastWeek;
+      case "last-visit":
+        return status.isLastVisit;
       case "critical":
         return status.isCritical;
       case "low-risk":
@@ -173,7 +173,7 @@ export default function Dashboard() {
 
   const statusCounts = {
     new: (patients || []).filter(p => getPatientStatus(p).isNew).length,
-    lastWeek: (patients || []).filter(p => getPatientStatus(p).isLastWeek).length,
+    lastVisit: (patients || []).filter(p => getPatientStatus(p).isLastVisit).length,
     critical: (patients || []).filter(p => getPatientStatus(p).isCritical).length,
     lowRisk: (patients || []).filter(p => getPatientStatus(p).isLowRisk).length,
     booked: (patients || []).filter(p => getPatientStatus(p).isBooked).length,
@@ -638,13 +638,13 @@ export default function Dashboard() {
                     <span className="text-xs bg-blue-200 text-blue-900 px-2 py-1 rounded">{statusCounts.new}</span>
                   </Button>
                   <Button
-                    variant={statusFilter === "last-week" ? "default" : "outline"}
+                    variant={statusFilter === "last-visit" ? "default" : "outline"}
                     className="w-full justify-between text-left"
-                    onClick={() => setStatusFilter("last-week")}
-                    data-testid="button-filter-last-week"
+                    onClick={() => setStatusFilter("last-visit")}
+                    data-testid="button-filter-last-visit"
                   >
-                    <span>Last Week</span>
-                    <span className="text-xs bg-purple-200 text-purple-900 px-2 py-1 rounded">{statusCounts.lastWeek}</span>
+                    <span>Last Visit</span>
+                    <span className="text-xs bg-purple-200 text-purple-900 px-2 py-1 rounded">{statusCounts.lastVisit}</span>
                   </Button>
                   <Button
                     variant={statusFilter === "critical" ? "default" : "outline"}
