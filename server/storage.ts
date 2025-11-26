@@ -80,6 +80,13 @@ export class MemStorage implements IStorage {
         fullName: "Nurse Emily Davis",
         isActive: 1,
       },
+      {
+        username: "patient",
+        password: "paypass",
+        role: "patient",
+        fullName: "Patient User",
+        isActive: 1,
+      },
     ];
 
     defaultUsers.forEach(user => {
