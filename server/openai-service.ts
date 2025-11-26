@@ -11,10 +11,10 @@ export interface ChatResponse {
 
 let openaiInstance: OpenAI | null = null;
 
-function getOpenAIClient(): OpenAI {
+function getOpenAIClient(): OpenAI | null {
   if (!openaiInstance) {
     if (!process.env.OPENAI_API_KEY) {
-      throw new Error("OPENAI_API_KEY environment variable is not set");
+      return null;
     }
     openaiInstance = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   }
@@ -32,6 +32,9 @@ export class OpenAIService {
   ): Promise<ChatResponse> {
     try {
       const openai = getOpenAIClient();
+      if (!openai) {
+        return SimulatedChatbotService.getDiagnosisAssistance(symptoms, vitals, medicalHistory);
+      }
       const systemPrompt = `You are Dr. Tega, an expert AI healthcare assistant specializing in medical diagnosis support. You provide evidence-based clinical insights while emphasizing that you assist, not replace, healthcare professionals.
 
 Your responses should:
@@ -82,6 +85,9 @@ Please provide diagnostic suggestions with confidence scores and recommended act
   static async getMedicalResponse(question: string): Promise<ChatResponse> {
     try {
       const openai = getOpenAIClient();
+      if (!openai) {
+        return SimulatedChatbotService.getMedicalResponse(question);
+      }
       const systemPrompt = `You are Dr. Tega, a knowledgeable AI healthcare assistant. You provide accurate, evidence-based medical information while being careful not to replace professional medical advice. 
 
 Key responsibilities:
@@ -120,6 +126,9 @@ Key responsibilities:
   static async analyzeLabResults(labData: string): Promise<ChatResponse> {
     try {
       const openai = getOpenAIClient();
+      if (!openai) {
+        return SimulatedChatbotService.analyzeLabResults(labData);
+      }
       const systemPrompt = `You are Dr. Tega, specialized in analyzing laboratory results. Provide insights on:
 1. What the results indicate
 2. Any abnormalities and their significance
