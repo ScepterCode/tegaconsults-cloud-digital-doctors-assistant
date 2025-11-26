@@ -81,12 +81,12 @@ function AppRoutes() {
                   </ProtectedRoute>
                 </Route>
                 <Route path="/appointments">
-                  <ProtectedRoute requiredRoles={["patient"]}>
+                  <ProtectedRoute requiredRoles={["patient", "admin"]}>
                     <PatientAppointments />
                   </ProtectedRoute>
                 </Route>
                 <Route path="/doctor/appointments">
-                  <ProtectedRoute requiredRoles={["doctor"]}>
+                  <ProtectedRoute requiredRoles={["doctor", "admin"]}>
                     <DoctorAppointments />
                   </ProtectedRoute>
                 </Route>

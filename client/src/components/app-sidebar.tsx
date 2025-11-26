@@ -54,13 +54,13 @@ export function AppSidebar() {
       title: "My Appointments",
       url: "/appointments",
       icon: Calendar,
-      roles: ["patient"],
+      roles: ["patient", "admin"],
     },
     {
       title: "Appointments",
       url: "/doctor/appointments",
       icon: Calendar,
-      roles: ["doctor"],
+      roles: ["doctor", "admin"],
     },
     {
       title: "User Management",
