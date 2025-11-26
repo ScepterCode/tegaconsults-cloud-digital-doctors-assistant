@@ -376,7 +376,7 @@
     </style>
 </head>
 <body>
-    <div class="presentation">
+    <div class="presentation" id="presentation">
         <!-- Slide 1: Title -->
         <div class="slide active slide-hero">
             <h1>Digital Doctors Assistant</h1>
@@ -541,12 +541,14 @@
         <div class="nav-buttons">
             <button class="btn-prev" onclick="prevSlide()">← Previous</button>
             <button class="btn-next" onclick="nextSlide()">Next →</button>
+            <button class="btn-prev" onclick="downloadPDF()" style="background: #28a745;">📥 Download PDF</button>
         </div>
         <div class="slide-counter">
             <span id="current-slide">1</span> / <span id="total-slides">7</span>
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
         let currentSlide = 0;
         const slides = document.querySelectorAll('.slide');
@@ -567,6 +569,18 @@
 
         function prevSlide() {
             showSlide(currentSlide - 1);
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('presentation');
+            const opt = {
+                margin: 0,
+                filename: 'Digital_Doctors_Assistant_Pitch.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
         }
 
         // Keyboard navigation
