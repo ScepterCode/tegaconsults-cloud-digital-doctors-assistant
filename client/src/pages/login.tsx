@@ -3,7 +3,7 @@ import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Activity, Camera, Fingerprint, User, Lock } from "lucide-react";
+import { Activity, Camera, Fingerprint, User, Lock, BarChart3, Brain, Shield, Zap, FileText, BookOpen } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,39 @@ import { useAuth } from "@/lib/auth-context";
 import { loginSchema, type LoginCredentials } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
+const features = [
+  {
+    icon: Fingerprint,
+    title: "Biometric Authentication",
+    description: "Secure access with fingerprint and facial recognition technology",
+  },
+  {
+    icon: Brain,
+    title: "AI Diagnosis",
+    description: "Predictive diagnosis powered by advanced AI algorithms",
+  },
+  {
+    icon: BarChart3,
+    title: "Result Analysis",
+    description: "Intelligent analysis of medical test results and lab reports",
+  },
+  {
+    icon: Shield,
+    title: "Role-Based Access",
+    description: "Secure access control for doctors, nurses, and administrators",
+  },
+  {
+    icon: FileText,
+    title: "Digital Records",
+    description: "Say goodbye to hard copy files with secure digital storage",
+  },
+  {
+    icon: Zap,
+    title: "Real-Time Updates",
+    description: "Instant access to patient information and medical history",
+  },
+];
+
 export default function Login() {
   const [, setLocation] = useLocation();
   const { login } = useAuth();
@@ -36,6 +69,7 @@ export default function Login() {
   const [showBiometric, setShowBiometric] = useState(false);
   const [biometricType, setBiometricType] = useState<"facial" | "fingerprint">("facial");
   const [nin, setNin] = useState("");
+  const [showSignIn, setShowSignIn] = useState(false);
 
   const form = useForm<LoginCredentials>({
     resolver: zodResolver(loginSchema),
@@ -106,168 +140,227 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 via-background to-success/5 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary text-primary-foreground">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 via-blue-50 to-white">
+      {/* Hero Section */}
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 pt-8 pb-12">
+        {/* Logo and Title */}
+        <div className="text-center mb-8 space-y-4">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white">
             <Activity className="h-10 w-10" />
           </div>
-          <div>
-            <CardTitle className="text-2xl font-bold">Digital Doctors Assistant</CardTitle>
-            <CardDescription className="mt-2">
-              Sign in to access patient records and management
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {authMethod === "credentials" && (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            {...field}
-                            placeholder="Enter username"
-                            className="pl-10"
-                            data-testid="input-username"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
+            Digital Doctors Assistant
+          </h1>
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto">
+            Revolutionary healthcare management system with biometric authentication, AI-powered diagnostics, and secure patient record management.
+          </p>
+        </div>
 
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Password</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="Enter password"
-                            className="pl-10"
-                            data-testid="input-password"
-                          />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+        {/* CTA Buttons */}
+        <div className="flex gap-4 mb-16">
+          <Button
+            size="lg"
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8"
+            onClick={() => setShowSignIn(true)}
+            data-testid="button-get-started"
+          >
+            Get Started
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            className="rounded-full px-8"
+            onClick={() => setShowSignIn(true)}
+            data-testid="button-sign-in"
+          >
+            Sign In
+          </Button>
+        </div>
 
+        {/* Features Grid */}
+        <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {features.map((feature, index) => {
+            const Icon = feature.icon;
+            return (
+              <Card key={index} className="border-0 shadow-sm hover-elevate">
+                <CardContent className="pt-6">
+                  <div className="space-y-3">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-blue-600 text-white">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="font-semibold text-lg text-gray-900">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm">
+                      {feature.description}
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Sign In Modal */}
+      <Dialog open={showSignIn} onOpenChange={setShowSignIn}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Sign In</DialogTitle>
+            <DialogDescription>
+              Access your account with secure authentication methods
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {authMethod === "credentials" && (
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Username</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              {...field}
+                              placeholder="Enter username"
+                              className="pl-10"
+                              data-testid="input-username"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              {...field}
+                              type="password"
+                              placeholder="Enter password"
+                              className="pl-10"
+                              data-testid="input-password"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    disabled={loginMutation.isPending}
+                    data-testid="button-login"
+                  >
+                    {loginMutation.isPending ? "Signing in..." : "Sign In"}
+                  </Button>
+                </form>
+              </Form>
+            )}
+
+            {authMethod === "nin" && (
+              <div className="space-y-4">
+                <div>
+                  <Label>National Identification Number (NIN)</Label>
+                  <Input
+                    value={nin}
+                    onChange={(e) => setNin(e.target.value)}
+                    placeholder="Enter your NIN"
+                    data-testid="input-nin"
+                    className="mt-2"
+                  />
+                </div>
                 <Button
-                  type="submit"
-                  className="w-full"
+                  onClick={handleNINLogin}
+                  className="w-full bg-blue-600 hover:bg-blue-700"
                   disabled={loginMutation.isPending}
-                  data-testid="button-login"
+                  data-testid="button-nin-login"
                 >
-                  {loginMutation.isPending ? "Signing in..." : "Sign In"}
+                  {loginMutation.isPending ? "Verifying NIN..." : "Verify NIN"}
                 </Button>
-              </form>
-            </Form>
-          )}
-
-          {authMethod === "nin" && (
-            <div className="space-y-4">
-              <div>
-                <Label>National Identification Number (NIN)</Label>
-                <Input
-                  value={nin}
-                  onChange={(e) => setNin(e.target.value)}
-                  placeholder="Enter your NIN"
-                  data-testid="input-nin"
-                  className="mt-2"
-                />
               </div>
+            )}
+
+            <div className="relative my-2">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-muted-foreground">
+                  More options
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
               <Button
-                onClick={handleNINLogin}
-                className="w-full"
-                disabled={loginMutation.isPending}
-                data-testid="button-nin-login"
+                type="button"
+                variant={authMethod === "credentials" ? "default" : "outline"}
+                onClick={() => setAuthMethod("credentials")}
+                size="sm"
+                data-testid="button-auth-credentials"
               >
-                {loginMutation.isPending ? "Verifying NIN..." : "Verify NIN"}
+                <User className="h-3 w-3 mr-1" />
+                Username
+              </Button>
+              <Button
+                type="button"
+                variant={authMethod === "nin" ? "default" : "outline"}
+                onClick={() => setAuthMethod("nin")}
+                size="sm"
+                data-testid="button-auth-nin"
+              >
+                <Lock className="h-3 w-3 mr-1" />
+                NIN
+              </Button>
+              <Button
+                type="button"
+                variant={authMethod === "facial" ? "default" : "outline"}
+                onClick={() => handleBiometricAuth("facial")}
+                size="sm"
+                data-testid="button-facial-recognition"
+              >
+                <Camera className="h-3 w-3 mr-1" />
+                Face
+              </Button>
+              <Button
+                type="button"
+                variant={authMethod === "fingerprint" ? "default" : "outline"}
+                onClick={() => handleBiometricAuth("fingerprint")}
+                size="sm"
+                data-testid="button-fingerprint"
+              >
+                <Fingerprint className="h-3 w-3 mr-1" />
+                Fingerprint
               </Button>
             </div>
-          )}
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">
-                Authentication methods
-              </span>
+            <div className="bg-muted p-3 rounded-md space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Demo Credentials:</p>
+              <div className="space-y-1 text-xs font-mono">
+                <p>doctor1 / pass123</p>
+              </div>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              type="button"
-              variant={authMethod === "credentials" ? "default" : "outline"}
-              onClick={() => setAuthMethod("credentials")}
-              size="sm"
-              data-testid="button-auth-credentials"
-            >
-              <User className="h-3 w-3 mr-1" />
-              Username
-            </Button>
-            <Button
-              type="button"
-              variant={authMethod === "nin" ? "default" : "outline"}
-              onClick={() => setAuthMethod("nin")}
-              size="sm"
-              data-testid="button-auth-nin"
-            >
-              <Lock className="h-3 w-3 mr-1" />
-              NIN
-            </Button>
-            <Button
-              type="button"
-              variant={authMethod === "facial" ? "default" : "outline"}
-              onClick={() => handleBiometricAuth("facial")}
-              size="sm"
-              data-testid="button-facial-recognition"
-            >
-              <Camera className="h-3 w-3 mr-1" />
-              Face
-            </Button>
-            <Button
-              type="button"
-              variant={authMethod === "fingerprint" ? "default" : "outline"}
-              onClick={() => handleBiometricAuth("fingerprint")}
-              size="sm"
-              data-testid="button-fingerprint"
-            >
-              <Fingerprint className="h-3 w-3 mr-1" />
-              Fingerprint
-            </Button>
-          </div>
-
-          <div className="bg-muted p-4 rounded-md space-y-2">
-            <p className="text-xs font-medium text-muted-foreground">Default Credentials:</p>
-            <div className="space-y-1 text-xs">
-              <p className="font-mono">Admin: admin / adminpass</p>
-              <p className="font-mono">Doctor: doctor1 / pass123</p>
-              <p className="font-mono">Nurse: nurse1 / nursepass</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
+      {/* Biometric Dialog */}
       <Dialog open={showBiometric} onOpenChange={setShowBiometric}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
@@ -285,7 +378,7 @@ export default function Login() {
             {biometricType === "facial" ? (
               <div className="relative w-full max-w-md aspect-video bg-muted rounded-lg flex items-center justify-center">
                 <Camera className="h-24 w-24 text-muted-foreground" />
-                <div className="absolute inset-0 border-4 border-primary/50 rounded-lg animate-pulse" />
+                <div className="absolute inset-0 border-4 border-blue-600/50 rounded-lg animate-pulse" />
               </div>
             ) : (
               <div className="relative w-48 h-48 bg-muted rounded-full flex items-center justify-center">
@@ -302,7 +395,7 @@ export default function Login() {
 
             <div className="flex gap-2">
               <Button 
-                variant="default" 
+                className="bg-blue-600 hover:bg-blue-700"
                 onClick={() => handleBiometricCapture(biometricType)} 
                 data-testid="button-complete-biometric"
                 disabled={loginMutation.isPending}
