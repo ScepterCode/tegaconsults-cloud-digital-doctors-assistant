@@ -211,6 +211,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Lab Results endpoints
+  app.post("/api/lab-results", async (req, res) => {
+    try {
+      const labResultData = req.body;
+      const labResult = await storage.createLabResult(labResultData);
+      
+      // Perform automated analysis
+      const analysis = MLHealthService.analyzeLaboratoryResult(labResult);
+      const updatedLabResult = await storage.updateLabResult(labResult.id, {
+        automatedAnalysis: JSON.stringify(analysis),
+      });
+
+      return res.status(201).json(updatedLabResult);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/lab-results/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const labResult = await storage.getLabResult(id);
+      
+      if (!labResult) {
+        return res.status(404).json({ message: "Lab result not found" });
+      }
+
+      return res.json(labResult);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/patients/:patientId/lab-results", async (req, res) => {
+    try {
+      const { patientId } = req.params;
+      const labResults = await storage.getPatientLabResults(patientId);
+      return res.json(labResults);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/lab-results/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const updatedLabResult = await storage.updateLabResult(id, updates);
+      
+      if (!updatedLabResult) {
+        return res.status(404).json({ message: "Lab result not found" });
+      }
+
+      return res.json(updatedLabResult);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.delete("/api/lab-results/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteLabResult(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Lab result not found" });
+      }
+
+      return res.json({ message: "Lab result deleted successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

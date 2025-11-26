@@ -1,4 +1,4 @@
-import type { Patient } from "@shared/schema";
+import type { Patient, LabResult, LabResultAnalysis } from "@shared/schema";
 
 // ============================================================================
 // NLP & Speech Recognition Components

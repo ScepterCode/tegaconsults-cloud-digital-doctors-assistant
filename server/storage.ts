@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Patient, type InsertPatient } from "@shared/schema";
+import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -23,15 +23,24 @@ export interface IStorage {
   getAllPatients(): Promise<Patient[]>;
   updatePatient(id: string, updates: Partial<Patient>): Promise<Patient | undefined>;
   deletePatient(id: string): Promise<boolean>;
+  
+  // Lab Results operations
+  createLabResult(labResult: InsertLabResult): Promise<LabResult>;
+  getLabResult(id: string): Promise<LabResult | undefined>;
+  getPatientLabResults(patientId: string): Promise<LabResult[]>;
+  updateLabResult(id: string, updates: Partial<LabResult>): Promise<LabResult | undefined>;
+  deleteLabResult(id: string): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private patients: Map<string, Patient>;
+  private labResults: Map<string, LabResult>;
 
   constructor() {
     this.users = new Map();
     this.patients = new Map();
+    this.labResults = new Map();
     this.seedDefaultUsers();
     this.seedDefaultPatients();
   }
@@ -350,6 +359,48 @@ export class MemStorage implements IStorage {
 
   async deletePatient(id: string): Promise<boolean> {
     return this.patients.delete(id);
+  }
+
+  // Lab Results methods
+  async createLabResult(insertLabResult: InsertLabResult): Promise<LabResult> {
+    const id = randomUUID();
+    const now = new Date();
+    const labResult: LabResult = {
+      ...insertLabResult,
+      id,
+      createdAt: now,
+      updatedAt: now,
+      automatedAnalysis: null,
+    };
+    this.labResults.set(id, labResult);
+    return labResult;
+  }
+
+  async getLabResult(id: string): Promise<LabResult | undefined> {
+    return this.labResults.get(id);
+  }
+
+  async getPatientLabResults(patientId: string): Promise<LabResult[]> {
+    return Array.from(this.labResults.values()).filter(
+      (result) => result.patientId === patientId
+    );
+  }
+
+  async updateLabResult(id: string, updates: Partial<LabResult>): Promise<LabResult | undefined> {
+    const labResult = this.labResults.get(id);
+    if (!labResult) return undefined;
+
+    const updatedLabResult = {
+      ...labResult,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.labResults.set(id, updatedLabResult);
+    return updatedLabResult;
+  }
+
+  async deleteLabResult(id: string): Promise<boolean> {
+    return this.labResults.delete(id);
   }
 }
 

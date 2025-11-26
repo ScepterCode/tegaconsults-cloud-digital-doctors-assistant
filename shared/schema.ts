@@ -136,3 +136,68 @@ export const healthAssessmentSchema = z.object({
 });
 
 export type HealthAssessment = z.infer<typeof healthAssessmentSchema>;
+
+// Lab Results table for test uploads and automated analysis
+export const labResults = pgTable("lab_results", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  patientId: varchar("patient_id").notNull(), // Foreign key to patients
+  testName: text("test_name").notNull(), // e.g., "Blood Test", "Urinalysis", "ECG"
+  testCategory: text("test_category").notNull(), // e.g., "Hematology", "Biochemistry", "Imaging"
+  fileData: text("file_data"), // Base64 encoded file or JSON data
+  fileName: text("file_name").notNull(),
+  fileType: text("file_type"), // e.g., "application/pdf", "image/png", "application/json"
+  
+  // Test Results/Values
+  testValues: text("test_values"), // JSON string with key-value pairs of test results
+  normalRange: text("normal_range"), // Expected normal range reference
+  status: text("status").notNull(), // "normal", "abnormal", "critical"
+  
+  // Analysis
+  automatedAnalysis: text("automated_analysis"), // JSON: AI-powered interpretation
+  doctorNotes: text("doctor_notes"), // Clinical notes/interpretation
+  recommendations: text("recommendations"), // Follow-up recommendations
+  
+  // Metadata
+  uploadedBy: text("uploaded_by").notNull(), // User ID who uploaded
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+  reviewedBy: text("reviewed_by"), // Doctor who reviewed
+  reviewedAt: timestamp("reviewed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertLabResultSchema = createInsertSchema(labResults).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  automatedAnalysis: true,
+});
+
+export type InsertLabResult = z.infer<typeof insertLabResultSchema>;
+export type LabResult = typeof labResults.$inferSelect;
+
+// Lab Result Analysis Schema for ML outputs
+export const labResultAnalysisSchema = z.object({
+  testName: z.string(),
+  overallStatus: z.enum(["normal", "abnormal", "critical"]),
+  severity: z.enum(["low", "moderate", "high", "critical"]),
+  flaggedAbnormalities: z.array(
+    z.object({
+      parameter: z.string(),
+      value: z.string(),
+      normalRange: z.string(),
+      status: z.enum(["normal", "abnormal", "critical"]),
+      clinicalSignificance: z.string(),
+    })
+  ),
+  riskAssessment: z.object({
+    diseaseProbability: z.record(z.number()), // Disease name -> probability
+    acuteTreatmentNeeded: z.boolean(),
+    recommendedFollowUp: z.string(),
+  }),
+  recommendations: z.array(z.string()),
+  correlationWithVitals: z.string(),
+  historicalComparison: z.string(),
+});
+
+export type LabResultAnalysis = z.infer<typeof labResultAnalysisSchema>;
