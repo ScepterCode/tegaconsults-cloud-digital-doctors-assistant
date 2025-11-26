@@ -1,6 +1,55 @@
-node_modules
-dist
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+*.tar.gz
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production.local
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.iml
 .DS_Store
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Vite
 server/public
 vite.config.ts.*
-*.tar.gz
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+test-results/
+
+# Cache
+.cache/
+.eslintcache
+.turbo/
+
+# Development
+.next/
+out/
+*.local
