@@ -69,10 +69,25 @@ export const insertPatientSchema = createInsertSchema(patients).omit({
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
 export type Patient = typeof patients.$inferSelect;
 
-// Login schema
-export const loginSchema = z.object({
-  username: z.string().min(1, "Username is required"),
-  password: z.string().min(1, "Password is required"),
-});
+// Login schemas for different authentication methods
+export const loginSchema = z.union([
+  z.object({
+    authMethod: z.literal("credentials"),
+    username: z.string().min(1, "Username is required"),
+    password: z.string().min(1, "Password is required"),
+  }),
+  z.object({
+    authMethod: z.literal("nin"),
+    nin: z.string().min(1, "NIN is required"),
+  }),
+  z.object({
+    authMethod: z.literal("fingerprint"),
+    fingerprintData: z.string().min(1, "Fingerprint data is required"),
+  }),
+  z.object({
+    authMethod: z.literal("facial"),
+    facialData: z.string().min(1, "Facial data is required"),
+  }),
+]);
 
 export type LoginCredentials = z.infer<typeof loginSchema>;

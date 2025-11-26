@@ -5,6 +5,9 @@ export interface IStorage {
   // User operations
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByNIN(nin: string): Promise<User | undefined>;
+  getUserByFingerprint(fingerprintData: string): Promise<User | undefined>;
+  getUserByFacial(facialData: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   getAllUsers(): Promise<User[]>;
   updateUser(id: string, updates: Partial<User>): Promise<User | undefined>;
@@ -74,6 +77,36 @@ export class MemStorage implements IStorage {
     return Array.from(this.users.values()).find(
       (user) => user.username === username,
     );
+  }
+
+  async getUserByNIN(nin: string): Promise<User | undefined> {
+    // Look up user by NIN from patients table - find patient with this NIN and get their registering user
+    // For now, return first user as demo - in production would query patient's registeredBy
+    return Array.from(this.users.values()).find(
+      (user) => user.role === "doctor" || user.role === "admin",
+    );
+  }
+
+  async getUserByFingerprint(fingerprintData: string): Promise<User | undefined> {
+    // In production, would look up patient by fingerprint and get their associated user
+    // For demo, verify the fingerprint contains timestamp (our demo format)
+    if (fingerprintData.includes("fingerprint_")) {
+      return Array.from(this.users.values()).find(
+        (user) => user.role === "doctor" || user.role === "admin",
+      );
+    }
+    return undefined;
+  }
+
+  async getUserByFacial(facialData: string): Promise<User | undefined> {
+    // In production, would look up patient by facial data and get their associated user
+    // For demo, verify the facial data contains timestamp (our demo format)
+    if (facialData.includes("facial_")) {
+      return Array.from(this.users.values()).find(
+        (user) => user.role === "doctor" || user.role === "admin",
+      );
+    }
+    return undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {

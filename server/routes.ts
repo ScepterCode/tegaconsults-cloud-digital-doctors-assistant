@@ -1,23 +1,33 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertPatientSchema } from "@shared/schema";
+import { loginSchema, insertPatientSchema, type User } from "@shared/schema";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Authentication
   app.post("/api/auth/login", async (req, res) => {
     try {
-      const { username, password } = loginSchema.parse(req.body);
-      
-      const user = await storage.getUserByUsername(username);
+      const loginData = loginSchema.parse(req.body);
+      let user: User | undefined;
+
+      // Handle different authentication methods
+      if ("authMethod" in loginData) {
+        if (loginData.authMethod === "credentials") {
+          user = await storage.getUserByUsername(loginData.username);
+          if (user && user.password !== loginData.password) {
+            return res.status(401).json({ message: "Invalid credentials" });
+          }
+        } else if (loginData.authMethod === "nin") {
+          user = await storage.getUserByNIN(loginData.nin);
+        } else if (loginData.authMethod === "fingerprint") {
+          user = await storage.getUserByFingerprint(loginData.fingerprintData);
+        } else if (loginData.authMethod === "facial") {
+          user = await storage.getUserByFacial(loginData.facialData);
+        }
+      }
       
       if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
-      }
-
-      // Simple password check (in production, use bcrypt)
-      if (user.password !== password) {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
