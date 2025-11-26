@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { ChatBot } from "@/components/chatbot";
 import type { Patient, HealthAssessment } from "@shared/schema";
 
 type PatientStatusFilter = "all" | "new" | "last-visit" | "critical" | "low-risk" | "booked" | "discharged" | "death";
@@ -762,6 +763,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Chatbot */}
+      <ChatBot />
     </div>
   );
 }
