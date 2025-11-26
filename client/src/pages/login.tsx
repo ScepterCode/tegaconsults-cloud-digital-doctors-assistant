@@ -161,7 +161,7 @@ export default function Login() {
           <Button
             size="lg"
             className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8"
-            onClick={() => setShowSignIn(true)}
+            onClick={() => window.location.href = "/register"}
             data-testid="button-get-started"
           >
             Get Started

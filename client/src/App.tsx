@@ -10,6 +10,7 @@ import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/components/protected-route";
 import { ChatBot } from "@/components/chatbot";
 import Login from "@/pages/login";
+import Register from "@/pages/register";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
 import NewPatient from "@/pages/new-patient";
@@ -28,6 +29,7 @@ function AppRoutes() {
         <div className="flex-1">
           <Switch>
             <Route path="/" component={Login} />
+            <Route path="/register" component={Register} />
             <Route>
               <Redirect to="/" />
             </Route>

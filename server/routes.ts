@@ -1,13 +1,44 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, insertPatientSchema, insertAppointmentSchema, type User } from "@shared/schema";
+import { loginSchema, registerSchema, insertPatientSchema, insertAppointmentSchema, type User } from "@shared/schema";
 import { MLHealthService } from "./ml-service";
 import { OpenAIService } from "./openai-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Authentication
+  // Authentication - Register
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      const registerData = registerSchema.parse(req.body);
+
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(registerData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Username already exists" });
+      }
+
+      // Create new user
+      const newUser = await storage.createUser({
+        username: registerData.username,
+        password: registerData.password,
+        fullName: registerData.fullName,
+        role: registerData.role,
+        isActive: 1,
+      });
+
+      // Return user without password
+      const { password: _, ...userWithoutPassword } = newUser;
+      return res.status(201).json({ user: userWithoutPassword, message: "User registered successfully" });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Authentication - Login
   app.post("/api/auth/login", async (req, res) => {
     try {
       const loginData = loginSchema.parse(req.body);

@@ -93,6 +93,18 @@ export const loginSchema = z.union([
 
 export type LoginCredentials = z.infer<typeof loginSchema>;
 
+// Registration schema for new users
+export const registerSchema = z.object({
+  username: z.string().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  fullName: z.string().min(2, "Full name is required"),
+  role: z.enum(["doctor", "nurse", "admin"], {
+    errorMap: () => ({ message: "Please select a valid role" }),
+  }),
+});
+
+export type RegisterCredentials = z.infer<typeof registerSchema>;
+
 // Health Assessment Schema for ML model outputs
 export const healthAssessmentSchema = z.object({
   healthRiskScore: z.number().min(0).max(100),
