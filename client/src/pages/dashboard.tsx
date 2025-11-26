@@ -39,16 +39,11 @@ export default function Dashboard() {
 
   const searchMutation = useMutation({
     mutationFn: async (query: string) => {
-      if (searchType === "general") {
-        const results = await storage.searchPatients(query);
-        return results;
-      } else {
-        const res = await apiRequest("POST", "/api/patients/search", {
-          query,
-          searchType,
-        });
-        return await res.json();
-      }
+      const res = await apiRequest("POST", "/api/patients/search", {
+        query,
+        searchType,
+      });
+      return await res.json();
     },
     onSuccess: (results) => {
       if (results.length === 0) {
@@ -74,18 +69,14 @@ export default function Dashboard() {
     },
   });
 
-  const cdsQuery = useQuery<HealthAssessment>(
-    {
-      queryKey: ["/api/patients", selectedPatient?.id, "health-analysis"],
-      enabled: !!selectedPatient?.id,
+  const cdsQuery = useQuery<HealthAssessment>({
+    queryKey: ["/api/patients", selectedPatient?.id, "health-analysis"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/patients/${selectedPatient?.id}/health-analysis`);
+      return await res.json();
     },
-    {
-      queryFn: async () => {
-        const res = await apiRequest("GET", `/api/patients/${selectedPatient?.id}/health-analysis`);
-        return await res.json();
-      },
-    }
-  );
+    enabled: !!selectedPatient?.id,
+  });
 
   const handleSearch = () => {
     if (!searchQuery.trim()) {
