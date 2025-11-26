@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { MessageCircle, X, Send } from "lucide-react";
+import { MessageCircle, X, Send, Paperclip, Mic, Image, Video } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 
 interface ChatMessage {
@@ -11,6 +11,11 @@ interface ChatMessage {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  attachment?: {
+    type: "image" | "video" | "audio";
+    data: string;
+    name: string;
+  };
 }
 
 export function ChatBot() {
@@ -19,13 +24,20 @@ export function ChatBot() {
     {
       id: "1",
       role: "assistant",
-      content: "Hello! I'm your Digital Doctors Assistant. I can help you with:\n• Patient health information\n• Medication guidelines\n• Symptom analysis\n• Clinical recommendations\n• Health risk assessment\n\nHow can I assist you today?",
+      content: "Hello! I'm Dr. Tega, your Digital Doctors Assistant. I'm here to help you with:\n• Patient health information\n• Medication guidelines\n• Symptom analysis\n• Clinical recommendations\n• Health risk assessment\n\nYou can also share pictures, videos, or voice recordings to support patient care. How can I assist you today?",
       timestamp: new Date(),
     },
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [attachment, setAttachment] = useState<ChatMessage["attachment"]>();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const recordedChunksRef = useRef<Blob[]>([]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -35,6 +47,15 @@ export function ChatBot() {
 
   const generateAnswer = (query: string): string => {
     const lowerQuery = query.toLowerCase();
+
+    // Dr. Tega's personalized responses
+    if (lowerQuery.includes("who are you") || lowerQuery.includes("introduce")) {
+      return "I'm Dr. Tega, your Digital Doctors Assistant. I'm an AI-powered healthcare companion specialized in:\n• Patient assessment and evaluation\n• Clinical diagnosis support\n• Evidence-based medication recommendations\n• Risk prediction and early intervention\n• Health monitoring and follow-up guidance\n\nI'm here to enhance your clinical practice with intelligent insights!";
+    }
+
+    if (lowerQuery.includes("dr. tega") || lowerQuery.includes("dr tega")) {
+      return "That's me! Dr. Tega at your service. I combine advanced AI with medical expertise to provide comprehensive healthcare support. Whether you need diagnostic assistance, medication guidance, or patient risk assessment - I'm here to help 24/7!";
+    }
 
     // Common questions and answers about the healthcare system
     if (lowerQuery.includes("allerg")) {
@@ -101,19 +122,76 @@ export function ChatBot() {
     return "I can help with questions about:\n• Patient health information\n• Blood pressure, heart rate, temperature\n• Diagnoses and symptoms\n• Medications and prescriptions\n• Drug contraindications\n• Biometric identification\n• Health risk assessment\n• Clinical decision support\n\nWhat would you like to know more about?";
   };
 
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video" | "audio") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const data = event.target?.result as string;
+      setAttachment({
+        type,
+        data,
+        name: file.name,
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      recordedChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        recordedChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunksRef.current, { type: "audio/webm" });
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setAttachment({
+            type: "audio",
+            data: event.target?.result as string,
+            name: `voice_message_${Date.now()}.webm`,
+          });
+        };
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
   const handleSendMessage = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() && !attachment) return;
 
     // Add user message
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content: input || (attachment ? `Shared ${attachment.type} file: ${attachment.name}` : ""),
       timestamp: new Date(),
+      attachment,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setAttachment(undefined);
     setIsLoading(true);
 
     try {
@@ -121,7 +199,9 @@ export function ChatBot() {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       // Generate intelligent answer based on query
-      const answer = generateAnswer(input);
+      const answer = attachment
+        ? `I've received your ${attachment.type} file "${attachment.name}". Thank you for sharing this with me. I'm Dr. Tega, analyzing this media to support your patient care. For medical imaging, I can help identify key findings. For voice recordings, I can transcribe and analyze clinical notes. Please let me know what specific assistance you need with this file.`
+        : generateAnswer(input);
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -155,16 +235,16 @@ export function ChatBot() {
       {isOpen && (
         <Card className="fixed bottom-6 right-6 w-96 h-[600px] flex flex-col shadow-2xl z-50 bg-white">
           {/* Header */}
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-t-lg">
             <div className="flex items-center gap-2">
               <MessageCircle className="h-5 w-5" />
-              <CardTitle className="text-lg">Ask DDA Assistant</CardTitle>
+              <CardTitle className="text-lg">Dr. Tega - Healthcare Assistant</CardTitle>
             </div>
             <Button
               size="icon"
               variant="ghost"
               onClick={() => setIsOpen(false)}
-              className="h-8 w-8 text-white hover:bg-blue-500"
+              className="h-8 w-8 text-white hover:bg-purple-500"
               data-testid="button-close-chatbot"
             >
               <X className="h-4 w-4" />
@@ -183,14 +263,28 @@ export function ChatBot() {
                   <div
                     className={`max-w-xs px-4 py-2 rounded-lg text-sm leading-relaxed ${
                       msg.role === "user"
-                        ? "bg-blue-600 text-white rounded-br-none"
+                        ? "bg-purple-600 text-white rounded-br-none"
                         : "bg-white text-gray-800 border border-gray-200 rounded-bl-none"
                     }`}
                   >
+                    {msg.attachment && (
+                      <div className="mb-2 p-2 bg-gray-100 rounded">
+                        {msg.attachment.type === "image" && (
+                          <img src={msg.attachment.data} alt="Shared" className="max-w-xs h-auto rounded" />
+                        )}
+                        {msg.attachment.type === "video" && (
+                          <video src={msg.attachment.data} controls className="max-w-xs h-auto rounded" />
+                        )}
+                        {msg.attachment.type === "audio" && (
+                          <audio src={msg.attachment.data} controls className="w-full" />
+                        )}
+                        <p className="text-xs mt-1 text-gray-600">{msg.attachment.name}</p>
+                      </div>
+                    )}
                     <p className="whitespace-pre-wrap">{msg.content}</p>
                     <p
                       className={`text-xs mt-1 ${
-                        msg.role === "user" ? "text-blue-100" : "text-gray-500"
+                        msg.role === "user" ? "text-purple-100" : "text-gray-500"
                       }`}
                     >
                       {msg.timestamp.toLocaleTimeString([], {
@@ -216,10 +310,28 @@ export function ChatBot() {
           </ScrollArea>
 
           {/* Input Area */}
-          <CardContent className="p-4 border-t bg-white rounded-b-lg">
+          <CardContent className="p-4 border-t bg-white rounded-b-lg space-y-3">
+            {/* Media preview */}
+            {attachment && (
+              <div className="flex items-center gap-2 p-2 bg-gray-100 rounded">
+                {attachment.type === "image" && <Image className="h-4 w-4 text-blue-600" />}
+                {attachment.type === "video" && <Video className="h-4 w-4 text-red-600" />}
+                {attachment.type === "audio" && <Mic className="h-4 w-4 text-green-600" />}
+                <span className="text-xs text-gray-700 flex-1 truncate">{attachment.name}</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setAttachment(undefined)}
+                  className="h-6 w-6 p-0"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            )}
+
             <div className="flex gap-2">
               <Input
-                placeholder="Ask a question..."
+                placeholder="Ask Dr. Tega a question..."
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
@@ -229,14 +341,66 @@ export function ChatBot() {
               />
               <Button
                 onClick={handleSendMessage}
-                disabled={isLoading || !input.trim()}
+                disabled={isLoading || (!input.trim() && !attachment)}
                 size="icon"
-                className="bg-blue-600 hover:bg-blue-700"
+                className="bg-purple-600 hover:bg-purple-700"
                 data-testid="button-send-message"
               >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+
+            {/* Media upload buttons */}
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => imageInputRef.current?.click()}
+                className="flex-1 gap-2"
+                data-testid="button-upload-image"
+              >
+                <Image className="h-4 w-4" />
+                Picture
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => videoInputRef.current?.click()}
+                className="flex-1 gap-2"
+                data-testid="button-upload-video"
+              >
+                <Video className="h-4 w-4" />
+                Video
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`flex-1 gap-2 ${isRecording ? "bg-red-100 hover:bg-red-200" : ""}`}
+                data-testid="button-record-voice"
+              >
+                <Mic className={`h-4 w-4 ${isRecording ? "text-red-600 animate-pulse" : ""}`} />
+                {isRecording ? "Stop" : "Voice"}
+              </Button>
+            </div>
+
+            {/* Hidden file inputs */}
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleFileUpload(e, "image")}
+              className="hidden"
+              data-testid="input-hidden-image"
+            />
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              onChange={(e) => handleFileUpload(e, "video")}
+              className="hidden"
+              data-testid="input-hidden-video"
+            />
           </CardContent>
         </Card>
       )}
