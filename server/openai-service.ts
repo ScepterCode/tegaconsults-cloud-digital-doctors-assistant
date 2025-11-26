@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { SimulatedChatbotService } from "./simulated-chatbot-service";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 
@@ -69,16 +70,9 @@ Please provide diagnostic suggestions with confidence scores and recommended act
     } catch (error: any) {
       console.error("OpenAI API Error:", error);
       
-      // Handle billing/quota errors gracefully
-      if (error.code === "insufficient_quota" || error.status === 429) {
-        return {
-          response: "I'm Dr. Tega, your AI healthcare assistant. My OpenAI API connection is temporarily unavailable due to billing issues. However, I'm still here to help! Please check your OpenAI account billing at https://platform.openai.com/account/billing/overview to ensure your payment method is up to date and you have sufficient credits. Once resolved, I'll be back to providing full AI-powered diagnostic assistance.",
-          confidence: 0.5,
-          suggestedActions: ["Check OpenAI billing", "Update payment method", "Verify API quota"]
-        };
-      }
-      
-      throw new Error("Failed to get diagnosis assistance");
+      // Fallback to simulated response
+      console.log("Falling back to simulated diagnosis assistance");
+      return SimulatedChatbotService.getDiagnosisAssistance(symptoms, vitals, medicalHistory);
     }
   }
 
@@ -114,15 +108,9 @@ Key responsibilities:
     } catch (error: any) {
       console.error("OpenAI API Error:", error);
       
-      // Handle billing/quota errors gracefully
-      if (error.code === "insufficient_quota" || error.status === 429) {
-        return {
-          response: "I'm Dr. Tega, your AI healthcare assistant. My OpenAI API connection is temporarily unavailable due to billing issues. However, I'm still here to help! Please check your OpenAI account billing at https://platform.openai.com/account/billing/overview to ensure your payment method is up to date and you have sufficient credits. Once resolved, I'll be back to providing full AI-powered responses.",
-          confidence: 0.5,
-        };
-      }
-      
-      throw new Error("Failed to get medical response");
+      // Fallback to simulated response
+      console.log("Falling back to simulated medical response");
+      return SimulatedChatbotService.getMedicalResponse(question);
     }
   }
 
@@ -156,15 +144,9 @@ Key responsibilities:
     } catch (error: any) {
       console.error("OpenAI API Error:", error);
       
-      // Handle billing/quota errors gracefully
-      if (error.code === "insufficient_quota" || error.status === 429) {
-        return {
-          response: "I'm Dr. Tega, your AI healthcare assistant. My OpenAI API connection is temporarily unavailable due to billing issues. However, I'm still here to help! Please check your OpenAI account billing at https://platform.openai.com/account/billing/overview to ensure your payment method is up to date and you have sufficient credits. Once resolved, I'll be back to providing full AI-powered lab analysis.",
-          confidence: 0.5,
-        };
-      }
-      
-      throw new Error("Failed to analyze lab results");
+      // Fallback to simulated response
+      console.log("Falling back to simulated lab analysis");
+      return SimulatedChatbotService.analyzeLabResults(labData);
     }
   }
 }

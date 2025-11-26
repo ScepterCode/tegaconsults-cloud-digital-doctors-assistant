@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { Footer } from "@/components/footer";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/components/protected-route";
+import { ChatBot } from "@/components/chatbot";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Patients from "@/pages/patients";
@@ -97,6 +98,7 @@ function AppRoutes() {
             </main>
           </div>
         </div>
+        <ChatBot />
         <Footer />
       </div>
     </SidebarProvider>
