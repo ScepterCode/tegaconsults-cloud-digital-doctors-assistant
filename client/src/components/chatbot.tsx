@@ -47,81 +47,15 @@ export function ChatBot() {
     }
   }, [messages]);
 
-  const generateAnswer = (query: string): string => {
-    const lowerQuery = query.toLowerCase();
-
-    // Dr. Tega's personalized responses
-    if (lowerQuery.includes("who are you") || lowerQuery.includes("introduce")) {
-      return "I'm Dr. Tega, your Digital Doctors Assistant. I'm an AI-powered healthcare companion specialized in:\n• Patient assessment and evaluation\n• Clinical diagnosis support\n• Evidence-based medication recommendations\n• Risk prediction and early intervention\n• Health monitoring and follow-up guidance\n\nI'm here to enhance your clinical practice with intelligent insights!";
+  const getAIResponse = async (query: string): Promise<string> => {
+    try {
+      const response = await apiRequest("POST", "/api/chatbot/ask", { question: query });
+      const data = await response.json();
+      return data.response || "I'm having trouble processing that. Please try again.";
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+      return "I'm having trouble connecting to my AI systems. Please check your connection and try again.";
     }
-
-    if (lowerQuery.includes("dr. tega") || lowerQuery.includes("dr tega")) {
-      return "That's me! Dr. Tega at your service. I combine advanced AI with medical expertise to provide comprehensive healthcare support. Whether you need diagnostic assistance, medication guidance, or patient risk assessment - I'm here to help 24/7!";
-    }
-
-    // Common questions and answers about the healthcare system
-    if (lowerQuery.includes("allerg")) {
-      return "Allergies are critical in patient care! Every patient assessment includes mandatory allergy documentation. This prevents dangerous drug interactions and adverse reactions. Our system checks all prescriptions against patient allergies to ensure safety.";
-    }
-
-    if (lowerQuery.includes("blood pressure") || lowerQuery.includes("bp")) {
-      return "Blood pressure classification:\n• Normal: <120/80 mmHg\n• Elevated: 120-129/<80\n• Stage 1 Hypertension: 130-139/80-89\n• Stage 2 Hypertension: ≥140/≥90\n• Critical: >160/>110 (requires immediate attention)\n\nOur system flags critical BP readings automatically.";
-    }
-
-    if (lowerQuery.includes("contraindication")) {
-      return "Contraindications are conditions where specific medications should NOT be prescribed due to risk of harm. Our system automatically checks:\n• Patient allergies\n• Current medications\n• Medical conditions\n• Blood type compatibility\n\nEvery prescription recommendation includes contraindication warnings.";
-    }
-
-    if (lowerQuery.includes("genotype") || lowerQuery.includes("sickle")) {
-      return "Genotype information is crucial for personalized medicine:\n• AA: Normal (no sickle cell)\n• AS: Sickle cell trait (carrier)\n• SS: Sickle cell disease\n• AC/SC: Other hemoglobin variants\n\nThis affects drug metabolism, disease risk, and treatment protocols.";
-    }
-
-    if (lowerQuery.includes("biometric") || lowerQuery.includes("fingerprint") || lowerQuery.includes("facial")) {
-      return "Our system supports 3 biometric identification methods:\n1. NIN (National ID Number): National identification\n2. Fingerprint: Digital fingerprint scanning\n3. Facial Recognition: AI-powered facial matching\n\nAll methods work equally well for secure patient identification.";
-    }
-
-    if (lowerQuery.includes("diagnosis") || lowerQuery.includes("diagnose")) {
-      return "Our AI-powered diagnosis system:\n• Analyzes patient symptoms and vital signs\n• Cross-references medical history\n• Provides confidence scores for each condition\n• Suggests severity level (mild/moderate/severe)\n• Recommends evidence-based treatment options\n\nAlways validated by healthcare professionals.";
-    }
-
-    if (lowerQuery.includes("prescription") || lowerQuery.includes("drug") || lowerQuery.includes("medication")) {
-      return "Prescription recommendations include:\n• Drug name and classification\n• Dosage and frequency\n• Duration of treatment\n• Indication (why it's prescribed)\n• Contraindications (who shouldn't take it)\n• Side effects\n• Drug interactions\n\nAll recommendations follow evidence-based guidelines.";
-    }
-
-    if (lowerQuery.includes("risk") || lowerQuery.includes("score")) {
-      return "Health Risk Assessment calculates:\n• Overall risk score (0-100)\n• Risk level: LOW, MODERATE, HIGH, CRITICAL\n• Identified risk factors\n• Recommendation priority\n\nCritical scores (>75) trigger immediate alerts for healthcare provider review.";
-    }
-
-    if (lowerQuery.includes("vitals") || lowerQuery.includes("vital signs")) {
-      return "Key vital signs monitored:\n• Blood Pressure (systolic/diastolic)\n• Heart Rate (bpm)\n• Temperature (°C)\n• Weight (kg)\n• Respiratory Rate\n\nOur system analyzes trends and flags abnormalities instantly.";
-    }
-
-    if (lowerQuery.includes("temperature") || lowerQuery.includes("fever")) {
-      return "Temperature interpretation:\n• Normal: 36.5-37.5°C\n• Fever: >37.5°C\n• High fever: >39°C (medical attention needed)\n• Hypothermia: <36°C\n\nFever often indicates infection. Persistent fever >38°C warrants investigation.";
-    }
-
-    if (lowerQuery.includes("search") || lowerQuery.includes("find patient")) {
-      return "Patient search supports multiple methods:\n• Name: Search by first or last name\n• NIN: National ID number lookup\n• MRN: Medical Record Number\n• Fingerprint: Biometric scanning\n• Facial Recognition: AI matching\n\nPartial searches work too - just enter part of the name or ID!";
-    }
-
-    if (lowerQuery.includes("heart") || lowerQuery.includes("hr") || lowerQuery.includes("bpm")) {
-      return "Heart Rate interpretation:\n• Normal: 60-100 bpm at rest\n• Tachycardia: >100 bpm (elevated)\n• Bradycardia: <60 bpm (low)\n• Critical: >120 bpm (requires attention)\n\nAthletes may have lower resting heart rates (normal for them).";
-    }
-
-    if (lowerQuery.includes("health") || lowerQuery.includes("assistant")) {
-      return "Digital Doctors Assistant features:\n✓ Multi-method patient identification (NIN, Fingerprint, Facial)\n✓ AI-powered health risk prediction\n✓ Symptom-based diagnosis suggestions\n✓ Evidence-based drug prescriptions\n✓ Contraindication checking\n✓ Clinical Decision Support tools\n✓ Patient status filtering\n✓ 8 advanced ML/DL modules\n\nSecure, comprehensive healthcare management.";
-    }
-
-    if (lowerQuery.includes("cds") || lowerQuery.includes("clinical decision")) {
-      return "Clinical Decision Support (CDS) provides:\n• Evidence-based recommendations\n• Risk stratification\n• Treatment suggestions based on guidelines\n• Patient-specific considerations\n• Alternative treatment options\n• Supportive data and rationale\n\nDesigned to assist, not replace, clinical judgment.";
-    }
-
-    if (lowerQuery.includes("status") || lowerQuery.includes("filter")) {
-      return "Patient status filters available:\n• All: Show all patients\n• New: Recently registered\n• Last Visit: Within 7 days\n• Critical: BP>160 or HR>120\n• Low Risk: Stable vitals\n• Booked: Has appointments\n• Discharged: Ready for discharge\n• Death: Deceased patients\n\nUse filters to prioritize patients efficiently.";
-    }
-
-    // Default response with helpful suggestions
-    return "I can help with questions about:\n• Patient health information\n• Blood pressure, heart rate, temperature\n• Diagnoses and symptoms\n• Medications and prescriptions\n• Drug contraindications\n• Biometric identification\n• Health risk assessment\n• Clinical decision support\n\nWhat would you like to know more about?";
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: "image" | "video" | "audio") => {
@@ -197,13 +131,14 @@ export function ChatBot() {
     setIsLoading(true);
 
     try {
-      // Simulate AI processing delay
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      let answer: string;
 
-      // Generate intelligent answer based on query
-      const answer = attachment
-        ? `I've received your ${attachment.type} file "${attachment.name}". Thank you for sharing this with me. I'm Dr. Tega, analyzing this media to support your patient care. For medical imaging, I can help identify key findings. For voice recordings, I can transcribe and analyze clinical notes. Please let me know what specific assistance you need with this file.`
-        : generateAnswer(input);
+      if (attachment) {
+        answer = `I've received your ${attachment.type} file "${attachment.name}". Thank you for sharing this with me. I'm Dr. Tega, analyzing this media to support your patient care. For medical imaging, I can help identify key findings. For voice recordings, I can transcribe and analyze clinical notes. Please let me know what specific assistance you need with this file.`;
+      } else {
+        // Use real OpenAI AI for response
+        answer = await getAIResponse(input);
+      }
 
       const assistantMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),

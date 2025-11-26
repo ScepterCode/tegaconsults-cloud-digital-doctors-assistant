@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { loginSchema, insertPatientSchema, type User } from "@shared/schema";
 import { MLHealthService } from "./ml-service";
+import { OpenAIService } from "./openai-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -282,6 +283,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ message: "Lab result deleted successfully" });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // AI Chatbot - Dr. Tega responses powered by OpenAI
+  app.post("/api/chatbot/ask", async (req, res) => {
+    try {
+      const { question, symptoms, vitals, medicalHistory } = req.body;
+
+      if (!question) {
+        return res.status(400).json({ message: "Question is required" });
+      }
+
+      let response;
+
+      // Route to appropriate AI service based on query type
+      if (symptoms) {
+        response = await OpenAIService.getDiagnosisAssistance(symptoms, vitals, medicalHistory);
+      } else {
+        response = await OpenAIService.getMedicalResponse(question);
+      }
+
+      return res.json(response);
+    } catch (error) {
+      console.error("Chatbot error:", error);
+      return res.status(500).json({ 
+        message: "Error processing request",
+        response: "I'm having trouble connecting to my AI systems. Please try again or contact support.",
+        confidence: 0
+      });
     }
   });
 
