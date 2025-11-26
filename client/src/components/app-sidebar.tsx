@@ -5,7 +5,8 @@ import {
   Settings, 
   LogOut,
   UserCog,
-  Calendar
+  Calendar,
+  CreditCard
 } from "lucide-react";
 import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Link, useLocation } from "wouter";
@@ -67,6 +68,12 @@ export function AppSidebar() {
       url: "/users",
       icon: UserCog,
       roles: ["admin"],
+    },
+    {
+      title: "Billing",
+      url: "/billing",
+      icon: CreditCard,
+      roles: ["admin", "doctor", "nurse", "patient"],
     },
   ];
 

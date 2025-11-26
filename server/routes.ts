@@ -490,6 +490,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Subscription routes
+  app.get("/api/subscription/:userId", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      let subscription = await storage.getSubscription(userId);
+      
+      if (!subscription) {
+        // Create subscription on first access (new user gets trial)
+        subscription = await storage.createSubscription({
+          userId,
+          tier: "free",
+          status: "trial",
+        });
+      }
+
+      return res.json(subscription);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/subscription/:userId/upgrade", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const { billingCycle } = req.body; // "monthly" or "yearly"
+
+      const subscription = await storage.updateSubscription(userId, {
+        tier: "pro",
+        status: "active",
+        billingCycle,
+        subscriptionStartDate: new Date(),
+        subscriptionEndDate: new Date(Date.now() + (billingCycle === "yearly" ? 365 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000)),
+      });
+
+      if (!subscription) {
+        return res.status(404).json({ message: "Subscription not found" });
+      }
+
+      return res.json({ message: "Upgraded to pro", subscription });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/subscription/:userId/cancel", async (req, res) => {
+    try {
+      const { userId } = req.params;
+
+      const subscription = await storage.updateSubscription(userId, {
+        status: "cancelled",
+      });
+
+      if (!subscription) {
+        return res.status(404).json({ message: "Subscription not found" });
+      }
+
+      return res.json({ message: "Subscription cancelled", subscription });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

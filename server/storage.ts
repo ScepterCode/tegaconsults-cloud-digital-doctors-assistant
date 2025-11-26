@@ -509,6 +509,42 @@ export class MemStorage implements IStorage {
   async deletePasswordResetToken(token: string): Promise<void> {
     this.passwordResetTokens.delete(token);
   }
+
+  // Subscription methods
+  async createSubscription(insertSubscription: InsertSubscription): Promise<Subscription> {
+    const id = randomUUID();
+    const now = new Date();
+    const trialEndDate = new Date(now);
+    trialEndDate.setDate(trialEndDate.getDate() + 30); // 30-day trial
+    
+    const subscription: Subscription = {
+      ...insertSubscription,
+      id,
+      trialStartDate: now,
+      trialEndDate,
+      createdAt: now,
+      updatedAt: now,
+    };
+    this.subscriptions.set(insertSubscription.userId, subscription);
+    return subscription;
+  }
+
+  async getSubscription(userId: string): Promise<Subscription | undefined> {
+    return this.subscriptions.get(userId);
+  }
+
+  async updateSubscription(userId: string, updates: Partial<Subscription>): Promise<Subscription | undefined> {
+    const subscription = this.subscriptions.get(userId);
+    if (!subscription) return undefined;
+
+    const updatedSubscription = {
+      ...subscription,
+      ...updates,
+      updatedAt: new Date(),
+    };
+    this.subscriptions.set(userId, updatedSubscription);
+    return updatedSubscription;
+  }
 }
 
 export const storage = new MemStorage();

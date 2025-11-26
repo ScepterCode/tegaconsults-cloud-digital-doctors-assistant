@@ -1,0 +1,242 @@
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Check } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import type { Subscription } from "@shared/schema";
+
+export default function Billing() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const { data: subscription, isLoading } = useQuery<Subscription>({
+    queryKey: ["/api/subscription", user?.id],
+    enabled: !!user?.id,
+  });
+
+  const upgradeMutation = useMutation({
+    mutationFn: async (billingCycle: "monthly" | "yearly") => {
+      const res = await apiRequest("POST", `/api/subscription/${user?.id}/upgrade`, {
+        billingCycle,
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "You've upgraded to Pro! Enjoy all premium features.",
+      });
+      window.location.reload();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to upgrade subscription",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", `/api/subscription/${user?.id}/cancel`, {});
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Subscription Cancelled",
+        description: "Your Pro subscription has been cancelled.",
+      });
+      window.location.reload();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to cancel subscription",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const isTrialActive = subscription?.status === "trial";
+  const isProActive = subscription?.status === "active" && subscription?.tier === "pro";
+
+  const getDaysLeft = () => {
+    if (!subscription?.trialEndDate) return 0;
+    const now = new Date();
+    const endDate = new Date(subscription.trialEndDate);
+    const daysLeft = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return Math.max(0, daysLeft);
+  };
+
+  const daysLeft = getDaysLeft();
+
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
+        <p className="text-gray-600 mt-2">
+          Manage your subscription plan and billing settings
+        </p>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <p className="text-muted-foreground">Loading subscription info...</p>
+        </div>
+      ) : (
+        <>
+          {/* Current Plan Status */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Current Plan</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold">
+                      {isProActive ? "Professional Plan" : "Free Trial"}
+                    </h3>
+                    <Badge variant={isProActive ? "default" : "secondary"}>
+                      {isProActive ? "Active" : "Trial"}
+                    </Badge>
+                  </div>
+                  {isTrialActive && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {daysLeft} days remaining in your free trial
+                    </p>
+                  )}
+                  {isProActive && subscription?.billingCycle && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {subscription.billingCycle === "monthly" ? "₦15,000 per month" : "₦100,000 per year"}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {isProActive && (
+                <Button
+                  variant="destructive"
+                  onClick={() => cancelMutation.mutate()}
+                  disabled={cancelMutation.isPending}
+                  data-testid="button-cancel-subscription"
+                >
+                  {cancelMutation.isPending ? "Cancelling..." : "Cancel Subscription"}
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Pricing Plans */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Upgrade to Pro</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Monthly Plan */}
+              <Card className="relative">
+                <CardHeader>
+                  <CardTitle>Monthly</CardTitle>
+                  <CardDescription>Perfect for ongoing access</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <span className="text-4xl font-bold">₦15,000</span>
+                    <p className="text-sm text-muted-foreground mt-1">per month</p>
+                  </div>
+
+                  <ul className="space-y-3">
+                    {[
+                      "All AI features",
+                      "Advanced diagnostics",
+                      "Lab analysis",
+                      "Appointment management",
+                      "Email support",
+                      "Patient records",
+                    ].map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() => upgradeMutation.mutate("monthly")}
+                    disabled={upgradeMutation.isPending || isProActive}
+                    data-testid="button-upgrade-monthly"
+                  >
+                    {isProActive ? "Current Plan" : upgradeMutation.isPending ? "Processing..." : "Upgrade Now"}
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Yearly Plan */}
+              <Card className="relative border-2 border-blue-600">
+                <div className="absolute top-0 right-0 bg-blue-600 text-white px-4 py-1 rounded-bl-md text-sm font-semibold">
+                  Save 33%
+                </div>
+                <CardHeader>
+                  <CardTitle>Yearly</CardTitle>
+                  <CardDescription>Best value - Save 2 months</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div>
+                    <span className="text-4xl font-bold">₦100,000</span>
+                    <p className="text-sm text-muted-foreground mt-1">per year</p>
+                  </div>
+
+                  <ul className="space-y-3">
+                    {[
+                      "All AI features",
+                      "Advanced diagnostics",
+                      "Lab analysis",
+                      "Appointment management",
+                      "Priority support",
+                      "Patient records",
+                    ].map((feature) => (
+                      <li key={feature} className="flex items-center gap-2">
+                        <Check className="h-4 w-4 text-green-600" />
+                        <span className="text-sm">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <Button
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    onClick={() => upgradeMutation.mutate("yearly")}
+                    disabled={upgradeMutation.isPending || isProActive}
+                    data-testid="button-upgrade-yearly"
+                  >
+                    {isProActive ? "Current Plan" : upgradeMutation.isPending ? "Processing..." : "Upgrade Now"}
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+
+          {/* Trial Info */}
+          {isTrialActive && (
+            <Card className="bg-blue-50 border-blue-200">
+              <CardHeader>
+                <CardTitle className="text-blue-900">Free Trial Information</CardTitle>
+              </CardHeader>
+              <CardContent className="text-blue-800">
+                <p>
+                  You're currently on a free 30-day trial with access to all Pro features. After your trial
+                  ends, you'll need to upgrade to continue using advanced features like AI diagnostics, lab analysis, and more.
+                </p>
+                <p className="mt-4 font-semibold">
+                  Trial ends on: {subscription?.trialEndDate ? new Date(subscription.trialEndDate).toLocaleDateString() : "N/A"}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
