@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { loginSchema, insertPatientSchema, type User } from "@shared/schema";
+import { MLHealthService } from "./ml-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -155,6 +156,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       return res.json({ message: "Patient deleted successfully" });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ML Health Analysis - Predict health risk, suggest diagnosis, prescribe drugs
+  app.get("/api/patients/:id/health-analysis", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const patient = await storage.getPatient(id);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      const healthAssessment = MLHealthService.assessPatientHealth(patient);
+      return res.json(healthAssessment);
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }

@@ -91,3 +91,47 @@ export const loginSchema = z.union([
 ]);
 
 export type LoginCredentials = z.infer<typeof loginSchema>;
+
+// Health Assessment Schema for ML model outputs
+export const healthAssessmentSchema = z.object({
+  healthRiskScore: z.number().min(0).max(100),
+  riskLevel: z.enum(["LOW", "MODERATE", "HIGH", "CRITICAL"]),
+  riskFactors: z.array(z.string()),
+  suggestedDiagnosis: z.array(
+    z.object({
+      condition: z.string(),
+      confidence: z.number().min(0).max(1),
+      symptoms: z.array(z.string()),
+      severity: z.enum(["mild", "moderate", "severe"]),
+    })
+  ),
+  recommendations: z.array(
+    z.object({
+      category: z.string(),
+      recommendation: z.string(),
+      priority: z.enum(["low", "medium", "high"]),
+      action: z.string(),
+    })
+  ),
+  prescribedDrugs: z.array(
+    z.object({
+      drugName: z.string(),
+      dosage: z.string(),
+      frequency: z.string(),
+      duration: z.string(),
+      indication: z.string(),
+      contraindications: z.array(z.string()),
+      sideEffects: z.array(z.string()),
+    })
+  ),
+  analysisDetails: z.object({
+    bpAnalysis: z.string(),
+    heartRateAnalysis: z.string(),
+    temperatureAnalysis: z.string(),
+    weightAnalysis: z.string(),
+    ageRiskAnalysis: z.string(),
+    genotypeBenefit: z.string(),
+  }),
+});
+
+export type HealthAssessment = z.infer<typeof healthAssessmentSchema>;
