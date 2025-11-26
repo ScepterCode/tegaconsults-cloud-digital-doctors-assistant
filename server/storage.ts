@@ -41,17 +41,25 @@ export interface IStorage {
   deleteAppointment(id: string): Promise<boolean>;
 }
 
+interface PasswordResetToken {
+  token: string;
+  userId: string;
+  expiresAt: Date;
+}
+
 export class MemStorage implements IStorage {
   private users: Map<string, User>;
   private patients: Map<string, Patient>;
   private labResults: Map<string, LabResult>;
   private appointments: Map<string, Appointment>;
+  private passwordResetTokens: Map<string, PasswordResetToken>;
 
   constructor() {
     this.users = new Map();
     this.patients = new Map();
     this.labResults = new Map();
     this.appointments = new Map();
+    this.passwordResetTokens = new Map();
     this.seedDefaultUsers();
     this.seedDefaultPatients();
   }
