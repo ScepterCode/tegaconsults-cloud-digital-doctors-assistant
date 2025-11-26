@@ -41,6 +41,7 @@ export const patients = pgTable("patients", {
   bloodGroup: text("blood_group").notNull(), // 'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
   genotype: text("genotype").notNull(), // 'AA', 'AS', 'SS', 'AC', 'SC'
   allergies: text("allergies"), // Comma-separated or JSON
+  symptoms: text("symptoms"), // Current presenting symptoms
   
   // Current Vitals
   bloodPressureSystolic: integer("bp_systolic"), // mmHg

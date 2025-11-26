@@ -77,6 +77,7 @@ export default function NewPatient() {
       bloodGroup: "",
       genotype: "",
       allergies: "",
+      symptoms: "",
       bloodPressureSystolic: undefined,
       bloodPressureDiastolic: undefined,
       temperature: "",
@@ -440,6 +441,20 @@ export default function NewPatient() {
                     <FormLabel>Allergies</FormLabel>
                     <FormControl>
                       <Textarea {...field} placeholder="List any known allergies (e.g., Penicillin, Peanuts)" data-testid="input-allergies" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="symptoms"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Symptoms</FormLabel>
+                    <FormControl>
+                      <Textarea {...field} placeholder="List any presenting symptoms (e.g., Headache, Fever, Cough, Body pain)" data-testid="input-symptoms" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

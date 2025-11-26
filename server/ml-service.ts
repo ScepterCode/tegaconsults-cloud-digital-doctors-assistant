@@ -182,10 +182,38 @@ export class MLHealthService {
   }
 
   /**
-   * Generate diagnosis suggestions based on vitals and patient profile
+   * Generate diagnosis suggestions based on vitals, symptoms and patient profile
    */
   static suggestDiagnosis(patient: Patient): DiagnosisSuggestion[] {
     const suggestions: DiagnosisSuggestion[] = [];
+
+    // COMPULSORY: Allergy Assessment - Always included as first diagnosis
+    const allergySymptoms: string[] = [];
+    if (patient.allergies) {
+      allergySymptoms.push(`Known allergies: ${patient.allergies}`);
+    }
+    if (patient.symptoms) {
+      const symptomLower = patient.symptoms.toLowerCase();
+      if (symptomLower.includes("rash") || symptomLower.includes("itching") || symptomLower.includes("hives")) {
+        allergySymptoms.push("Skin reactions (rash/itching)");
+      }
+      if (symptomLower.includes("swelling") || symptomLower.includes("angioedema")) {
+        allergySymptoms.push("Facial or throat swelling");
+      }
+      if (symptomLower.includes("difficulty breathing") || symptomLower.includes("shortness of breath")) {
+        allergySymptoms.push("Respiratory symptoms");
+      }
+    }
+
+    suggestions.push({
+      condition: "Allergic Reaction Assessment",
+      confidence: patient.allergies ? 0.98 : 0.7,
+      symptoms: allergySymptoms.length > 0 ? allergySymptoms : ["Standard allergy screening required"],
+      severity: patient.allergies ? "moderate" : "mild",
+    });
+
+    // Analyze symptoms if present
+    const patientSymptoms = (patient.symptoms || "").toLowerCase();
 
     // Hypertension Pattern
     if (patient.bloodPressureSystolic && patient.bloodPressureSystolic >= 140) {
@@ -207,13 +235,38 @@ export class MLHealthService {
       });
     }
 
-    // Fever/Infection
+    // Fever/Infection - enhanced with symptom correlation
     if (patient.temperature && parseFloat(patient.temperature) >= 38) {
+      const infectionSymptoms = ["Elevated body temperature", "Chills", "Malaise"];
+      if (patientSymptoms.includes("cough")) infectionSymptoms.push("Cough");
+      if (patientSymptoms.includes("sore throat")) infectionSymptoms.push("Sore throat");
+      if (patientSymptoms.includes("body pain")) infectionSymptoms.push("Body aches");
+
       suggestions.push({
         condition: "Fever/Acute Infection",
         confidence: 0.9,
-        symptoms: ["Elevated body temperature", "Chills", "Malaise"],
+        symptoms: infectionSymptoms,
         severity: parseFloat(patient.temperature) >= 39 ? "severe" : "moderate",
+      });
+    }
+
+    // Respiratory conditions - based on symptoms
+    if (patientSymptoms.includes("cough") || patientSymptoms.includes("shortness of breath")) {
+      suggestions.push({
+        condition: "Respiratory Condition",
+        confidence: 0.8,
+        symptoms: ["Cough", "Shortness of breath", "Chest discomfort"],
+        severity: patientSymptoms.includes("severe") ? "severe" : "moderate",
+      });
+    }
+
+    // Headache/Migraine - based on symptoms and vitals
+    if (patientSymptoms.includes("headache") && patient.bloodPressureSystolic && patient.bloodPressureSystolic >= 140) {
+      suggestions.push({
+        condition: "Headache (Hypertension-related)",
+        confidence: 0.85,
+        symptoms: ["Headache", "High blood pressure", "Neck stiffness"],
+        severity: "moderate",
       });
     }
 
@@ -233,10 +286,12 @@ export class MLHealthService {
 
     // Sickle Cell
     if (patient.genotype === "SS") {
+      const sickleSymptoms = ["Vaso-occlusive crises", "Pain episodes", "Hemolysis"];
+      if (patientSymptoms.includes("pain")) sickleSymptoms.unshift("Acute pain episode");
       suggestions.push({
         condition: "Sickle Cell Disease",
         confidence: 1.0,
-        symptoms: ["Vaso-occlusive crises", "Pain episodes", "Hemolysis"],
+        symptoms: sickleSymptoms,
         severity: "severe",
       });
     }
@@ -262,6 +317,32 @@ export class MLHealthService {
 
     for (const diagnosis of diagnoses) {
       switch (diagnosis.condition) {
+        case "Allergic Reaction Assessment":
+          // Always prescribe antihistamine and allergy management protocols
+          prescriptions.push({
+            drugName: "Cetirizine (Antihistamine)",
+            dosage: "10 mg",
+            frequency: "Once or twice daily",
+            duration: "As needed",
+            indication: "Allergy management and symptom relief",
+            contraindications: ["Hypersensitivity to cetirizine"],
+            sideEffects: ["Drowsiness", "Dry mouth", "Headache"],
+          });
+
+          // If known allergies, add preventive advice
+          if (patient.allergies) {
+            prescriptions.push({
+              drugName: "Emergency Epinephrine (EpiPen)",
+              dosage: "0.3-0.5 mg",
+              frequency: "As needed for severe reactions",
+              duration: "Keep available",
+              indication: "Emergency treatment for severe allergic reactions",
+              contraindications: ["Use only in emergencies"],
+              sideEffects: ["Tremor", "Palpitations", "Anxiety"],
+            });
+          }
+          break;
+
         case "Hypertension":
           prescriptions.push({
             drugName: "Amlodipine (Calcium Channel Blocker)",
@@ -346,6 +427,39 @@ export class MLHealthService {
             indication: "Support blood production",
             contraindications: ["Pernicious anemia without B12"],
             sideEffects: ["Minimal"],
+          });
+          break;
+
+        case "Respiratory Condition":
+          prescriptions.push({
+            drugName: "Salbutamol (Albuterol Inhaler)",
+            dosage: "100-200 mcg",
+            frequency: "As needed every 4-6 hours",
+            duration: "7-14 days",
+            indication: "Bronchospasm and cough relief",
+            contraindications: ["Hypersensitivity to beta-2 agonists"],
+            sideEffects: ["Tremor", "Palpitations", "Headache"],
+          });
+          prescriptions.push({
+            drugName: "Cough Syrup (Dextromethorphan)",
+            dosage: "10-20 mg",
+            frequency: "Every 4-6 hours",
+            duration: "5-7 days",
+            indication: "Cough suppression",
+            contraindications: ["MAO inhibitors"],
+            sideEffects: ["Drowsiness", "Dizziness"],
+          });
+          break;
+
+        case "Headache (Hypertension-related)":
+          prescriptions.push({
+            drugName: "Ibuprofen",
+            dosage: "400-600 mg",
+            frequency: "Every 6-8 hours",
+            duration: "5-7 days",
+            indication: "Headache and pain relief",
+            contraindications: ["NSAID allergy", "Gastric ulcers"],
+            sideEffects: ["GI upset", "Dizziness"],
           });
           break;
 
