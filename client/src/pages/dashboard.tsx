@@ -1,216 +1,207 @@
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth-context";
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCheck, Activity, Calendar } from "lucide-react";
+import { Search, Plus, Fingerprint, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { Patient, User } from "@shared/schema";
+import type { Patient } from "@shared/schema";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const [, setLocation] = useLocation();
+  const { user, logout } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: patients, isLoading: patientsLoading } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
   });
 
-  const { data: users, isLoading: usersLoading } = useQuery<User[]>({
-    queryKey: ["/api/users"],
-    enabled: user?.role === "admin",
-  });
+  const filteredPatients = patients?.filter((patient) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      patient.nin.toLowerCase().includes(query) ||
+      patient.firstName.toLowerCase().includes(query) ||
+      patient.lastName.toLowerCase().includes(query)
+    );
+  }) || [];
 
-  const stats = [
-    {
-      title: "Total Patients",
-      value: patients?.length || 0,
-      icon: Users,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-    },
-    {
-      title: "Active Doctors",
-      value: users?.filter(u => u.role === "doctor" && u.isActive).length || 0,
-      icon: UserCheck,
-      color: "text-success",
-      bgColor: "bg-success/10",
-      adminOnly: true,
-    },
-    {
-      title: "Active Nurses",
-      value: users?.filter(u => u.role === "nurse" && u.isActive).length || 0,
-      icon: Activity,
-      color: "text-warning",
-      bgColor: "bg-warning/10",
-      adminOnly: true,
-    },
-    {
-      title: "Today's Registrations",
-      value: patients?.filter(p => {
-        const today = new Date().toDateString();
-        return new Date(p.createdAt!).toDateString() === today;
-      }).length || 0,
-      icon: Calendar,
-      color: "text-chart-3",
-      bgColor: "bg-chart-3/10",
-    },
-  ];
+  const handleLogout = () => {
+    logout();
+    setLocation("/");
+  };
 
-  const filteredStats = stats.filter(stat => 
-    !stat.adminOnly || user?.role === "admin"
-  );
+  const handleSearch = () => {
+    // Search is real-time via state, just for UI feedback
+  };
+
+  const handleClear = () => {
+    setSearchQuery("");
+  };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold" data-testid="text-dashboard-title">
-          Welcome, {user?.fullName}
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          {user?.role === "admin" && "Complete system overview and management"}
-          {user?.role === "doctor" && "Access and manage patient records"}
-          {user?.role === "nurse" && "View patient information and vitals"}
-        </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-6 py-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="h-10 w-10 bg-white/20 rounded-lg flex items-center justify-center">
+              <span className="text-lg font-bold">👨‍⚕️</span>
+            </div>
+            <h1 className="text-3xl font-bold">Doctor's Assistant</h1>
+          </div>
+          <p className="text-blue-100">
+            Welcome, {user?.fullName} — AI & CDS tools at your fingertips
+          </p>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {filteredStats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {stat.title}
-              </CardTitle>
-              <div className={`h-8 w-8 rounded-md ${stat.bgColor} flex items-center justify-center`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
-              </div>
-            </CardHeader>
-            <CardContent>
-              {patientsLoading || (stat.adminOnly && usersLoading) ? (
-                <Skeleton className="h-8 w-16" />
-              ) : (
-                <div className="text-2xl font-bold" data-testid={`stat-${stat.title.toLowerCase().replace(/\s+/g, "-")}`}>
-                  {stat.value}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+      {/* Action Buttons */}
+      <div className="bg-white border-b px-6 py-4">
+        <div className="max-w-7xl mx-auto flex gap-3 flex-wrap">
+          <Button 
+            onClick={() => setLocation("/patients/new")}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+            data-testid="button-add-patient"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Patient
+          </Button>
+          <Button 
+            variant="outline"
+            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+            data-testid="button-fingerprint-verify"
+          >
+            <Fingerprint className="h-4 w-4 mr-2" />
+            ID Fingerprint Verification
+          </Button>
+          <Button 
+            onClick={handleLogout}
+            variant="destructive"
+            data-testid="button-logout"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Logout
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Patients</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {patientsLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3].map(i => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
+      {/* Main Content */}
+      <div className="px-6 py-8">
+        <div className="max-w-7xl mx-auto space-y-6">
+          {/* Search Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-gray-600" />
+              <h2 className="text-2xl font-bold text-gray-900">Search Patient</h2>
+            </div>
+            <Card className="p-6 bg-white">
+              <div className="flex gap-3 flex-wrap items-center">
+                <Input
+                  placeholder="Search by NIN or name (e.g. NIN123)"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="max-w-sm"
+                  data-testid="input-patient-search"
+                />
+                <Button 
+                  onClick={handleSearch}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  data-testid="button-search"
+                >
+                  Search
+                </Button>
+                <Button 
+                  onClick={handleClear}
+                  variant="outline"
+                  data-testid="button-clear"
+                >
+                  Clear
+                </Button>
+                <span className="text-sm text-gray-600">
+                  Tip: you can enter full or partial NIN or name.
+                </span>
               </div>
-            ) : patients && patients.length > 0 ? (
-              <div className="space-y-3">
-                {patients.slice(0, 5).map((patient) => (
-                  <div
-                    key={patient.id}
-                    className="flex items-center justify-between p-3 rounded-lg border hover-elevate active-elevate-2"
-                    data-testid={`patient-item-${patient.id}`}
-                  >
-                    <div>
-                      <p className="font-medium">
-                        {patient.firstName} {patient.lastName}
-                      </p>
-                      <p className="text-sm text-muted-foreground font-mono">
-                        MRN: {patient.mrn}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium" data-testid={`text-blood-group-${patient.id}`}>{patient.bloodGroup}</p>
-                      <p className="text-xs text-muted-foreground" data-testid={`text-genotype-${patient.id}`}>{patient.genotype}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p>No patients registered yet</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </Card>
+          </div>
 
-        {user?.role === "admin" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>System Status</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {usersLoading ? (
-                <div className="space-y-3">
-                  {[1, 2, 3].map(i => (
+          {/* Patient Records Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 text-gray-600">📋</div>
+              <h2 className="text-2xl font-bold text-gray-900">Patient Records</h2>
+            </div>
+            
+            <div className="text-sm text-gray-700 font-semibold">
+              Total Patients: <span data-testid="text-total-patients">{patients?.length || 0}</span>
+            </div>
+
+            <Card className="bg-white overflow-hidden">
+              {patientsLoading ? (
+                <div className="space-y-3 p-6">
+                  {[1, 2, 3].map((i) => (
                     <Skeleton key={i} className="h-12 w-full" />
                   ))}
                 </div>
+              ) : filteredPatients.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="bg-blue-600 text-white">
+                        <th className="px-6 py-3 text-left text-sm font-semibold">Name</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold">Age</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold">Gender</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold">Symptoms</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold">BP</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold">Temp (°C)</th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold">Fingerprint ID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredPatients.map((patient) => (
+                        <tr 
+                          key={patient.id}
+                          className="border-b hover:bg-gray-50 cursor-pointer transition"
+                          onClick={() => setLocation(`/patients/${patient.id}`)}
+                          data-testid={`row-patient-${patient.id}`}
+                        >
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                            {patient.firstName} {patient.lastName}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">{patient.age}</td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {patient.allergies || "—"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700 font-mono">
+                            {patient.bloodPressureSystolic && patient.bloodPressureDiastolic
+                              ? `${patient.bloodPressureSystolic}/${patient.bloodPressureDiastolic}`
+                              : "—"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {patient.temperature || "—"}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-700">
+                            {patient.fingerprintData ? "✓" : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Active Users</span>
-                    <span className="text-2xl font-bold" data-testid="stat-active-users">
-                      {users?.filter(u => u.isActive).length || 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Inactive Users</span>
-                    <span className="text-2xl font-bold" data-testid="stat-inactive-users">
-                      {users?.filter(u => !u.isActive).length || 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Total Records</span>
-                    <span className="text-2xl font-bold" data-testid="stat-total-records">
-                      {patients?.length || 0}
-                    </span>
-                  </div>
+                <div className="text-center py-12">
+                  <p className="text-gray-600">
+                    {searchQuery ? "No patients found matching your search." : "No patients registered yet."}
+                  </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        )}
-
-        {user?.role !== "admin" && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <a href="/patients/new" className="block" data-testid="link-register-new-patient">
-                <Card className="hover-elevate active-elevate-2 cursor-pointer">
-                  <CardContent className="flex items-center gap-3 p-4">
-                    <div className="h-10 w-10 rounded-md bg-primary/10 flex items-center justify-center">
-                      <Users className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="font-medium">Register New Patient</p>
-                      <p className="text-xs text-muted-foreground">Add patient records</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </a>
-              <a href="/patients" className="block" data-testid="link-view-all-patients">
-                <Card className="hover-elevate active-elevate-2 cursor-pointer">
-                  <CardContent className="flex items-center gap-3 p-4">
-                    <div className="h-10 w-10 rounded-md bg-success/10 flex items-center justify-center">
-                      <Activity className="h-5 w-5 text-success" />
-                    </div>
-                    <div>
-                      <p className="font-medium">View All Patients</p>
-                      <p className="text-xs text-muted-foreground">Browse patient list</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </a>
-            </CardContent>
-          </Card>
-        )}
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
