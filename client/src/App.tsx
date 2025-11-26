@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
+import { Footer } from "@/components/footer";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/components/protected-route";
 import Login from "@/pages/login";
@@ -22,12 +23,17 @@ function AppRoutes() {
 
   if (!isAuthenticated) {
     return (
-      <Switch>
-        <Route path="/" component={Login} />
-        <Route>
-          <Redirect to="/" />
-        </Route>
-      </Switch>
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-1">
+          <Switch>
+            <Route path="/" component={Login} />
+            <Route>
+              <Redirect to="/" />
+            </Route>
+          </Switch>
+        </div>
+        <Footer />
+      </div>
     );
   }
 
@@ -38,57 +44,60 @@ function AppRoutes() {
 
   return (
     <SidebarProvider style={style as React.CSSProperties}>
-      <div className="flex h-screen w-full">
-        <AppSidebar />
-        <div className="flex flex-col flex-1 overflow-hidden">
-          <header className="flex items-center gap-4 border-b p-4">
-            <SidebarTrigger data-testid="button-sidebar-toggle" />
-            <h2 className="text-lg font-semibold">Digital Doctors Assistant</h2>
-          </header>
-          <main className="flex-1 overflow-auto p-6 bg-background">
-            <Switch>
-              <Route path="/dashboard">
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/patients">
-                <ProtectedRoute>
-                  <Patients />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/patients/new">
-                <ProtectedRoute>
-                  <NewPatient />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/patients/:id">
-                <ProtectedRoute>
-                  <PatientDetail />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/users">
-                <ProtectedRoute requiredRoles={["admin"]}>
-                  <Users />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/appointments">
-                <ProtectedRoute requiredRoles={["patient"]}>
-                  <PatientAppointments />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/doctor/appointments">
-                <ProtectedRoute requiredRoles={["doctor"]}>
-                  <DoctorAppointments />
-                </ProtectedRoute>
-              </Route>
-              <Route path="/">
-                <Redirect to="/dashboard" />
-              </Route>
-              <Route component={NotFound} />
-            </Switch>
-          </main>
+      <div className="flex h-screen w-full flex-col">
+        <div className="flex flex-1 overflow-hidden">
+          <AppSidebar />
+          <div className="flex flex-col flex-1 overflow-hidden">
+            <header className="flex items-center gap-4 border-b p-4">
+              <SidebarTrigger data-testid="button-sidebar-toggle" />
+              <h2 className="text-lg font-semibold">Digital Doctors Assistant</h2>
+            </header>
+            <main className="flex-1 overflow-auto p-6 bg-background">
+              <Switch>
+                <Route path="/dashboard">
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/patients">
+                  <ProtectedRoute>
+                    <Patients />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/patients/new">
+                  <ProtectedRoute>
+                    <NewPatient />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/patients/:id">
+                  <ProtectedRoute>
+                    <PatientDetail />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/users">
+                  <ProtectedRoute requiredRoles={["admin"]}>
+                    <Users />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/appointments">
+                  <ProtectedRoute requiredRoles={["patient"]}>
+                    <PatientAppointments />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/doctor/appointments">
+                  <ProtectedRoute requiredRoles={["doctor"]}>
+                    <DoctorAppointments />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/">
+                  <Redirect to="/dashboard" />
+                </Route>
+                <Route component={NotFound} />
+              </Switch>
+            </main>
+          </div>
         </div>
+        <Footer />
       </div>
     </SidebarProvider>
   );
