@@ -60,9 +60,10 @@ export class MemStorage implements IStorage {
     defaultUsers.forEach(user => {
       const id = randomUUID();
       const newUser: User = { 
-        ...user, 
+        ...user,
         id,
         createdAt: new Date(),
+        isActive: user.isActive ?? 1,
       };
       this.users.set(id, newUser);
     });
@@ -112,9 +113,10 @@ export class MemStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
     const user: User = { 
-      ...insertUser, 
+      ...insertUser,
       id,
       createdAt: new Date(),
+      isActive: insertUser.isActive ?? 1,
     };
     this.users.set(id, user);
     return user;
@@ -148,10 +150,11 @@ export class MemStorage implements IStorage {
     const id = randomUUID();
     const now = new Date();
     const patient: Patient = { 
-      ...insertPatient, 
+      ...insertPatient,
       id,
       createdAt: now,
       updatedAt: now,
+      address: insertPatient.address ?? null,
     };
     this.patients.set(id, patient);
     return patient;
