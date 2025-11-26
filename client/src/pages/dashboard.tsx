@@ -22,6 +22,18 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Patient, HealthAssessment } from "@shared/schema";
 
+type PatientStatusFilter = "all" | "new" | "last-week" | "critical" | "low-risk" | "booked" | "discharged" | "death";
+
+interface PatientStatus {
+  isNew: boolean;
+  isLastWeek: boolean;
+  isCritical: boolean;
+  isLowRisk: boolean;
+  isBooked: boolean;
+  isDischarged: boolean;
+  isDeath: boolean;
+}
+
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { user, logout } = useAuth();
@@ -32,6 +44,7 @@ export default function Dashboard() {
   );
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [showCDS, setShowCDS] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<PatientStatusFilter>("all");
 
   const { data: patients, isLoading: patientsLoading } = useQuery<Patient[]>({
     queryKey: ["/api/patients"],
@@ -114,6 +127,58 @@ export default function Dashboard() {
       default:
         return "bg-gray-100 text-gray-900";
     }
+  };
+
+  const getPatientStatus = (patient: Patient): PatientStatus => {
+    const now = new Date();
+    const createdDate = patient.createdAt ? new Date(patient.createdAt) : new Date();
+    const daysOld = Math.floor((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    // Simple heuristics for demo purposes
+    const isNew = daysOld <= 1;
+    const isLastWeek = daysOld <= 7;
+    const isCritical = (patient.bloodPressureSystolic && patient.bloodPressureSystolic > 160) || 
+                       (patient.heartRate && patient.heartRate > 120);
+    const isLowRisk = !isCritical && patient.temperature && parseFloat(patient.temperature) < 37.5;
+    const isBooked = patient.phoneNumber && patient.phoneNumber.length > 0;
+    const isDischarged = patient.age && patient.age > 60 && isLowRisk;
+    const isDeath = false; // Placeholder
+
+    return { isNew, isLastWeek, isCritical, isLowRisk, isBooked, isDischarged, isDeath };
+  };
+
+  const filteredPatients = (patients || []).filter((patient) => {
+    if (statusFilter === "all") return true;
+    
+    const status = getPatientStatus(patient);
+    switch (statusFilter) {
+      case "new":
+        return status.isNew;
+      case "last-week":
+        return status.isLastWeek;
+      case "critical":
+        return status.isCritical;
+      case "low-risk":
+        return status.isLowRisk;
+      case "booked":
+        return status.isBooked;
+      case "discharged":
+        return status.isDischarged;
+      case "death":
+        return status.isDeath;
+      default:
+        return true;
+    }
+  });
+
+  const statusCounts = {
+    new: (patients || []).filter(p => getPatientStatus(p).isNew).length,
+    lastWeek: (patients || []).filter(p => getPatientStatus(p).isLastWeek).length,
+    critical: (patients || []).filter(p => getPatientStatus(p).isCritical).length,
+    lowRisk: (patients || []).filter(p => getPatientStatus(p).isLowRisk).length,
+    booked: (patients || []).filter(p => getPatientStatus(p).isBooked).length,
+    discharged: (patients || []).filter(p => getPatientStatus(p).isDischarged).length,
+    death: (patients || []).filter(p => getPatientStatus(p).isDeath).length,
   };
 
   return (
@@ -545,73 +610,155 @@ export default function Dashboard() {
           )}
 
           {/* Patient Records Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="h-5 w-5 text-gray-600">📋</div>
-              <h2 className="text-2xl font-bold text-gray-900">Patient Records</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Filter Panel - Right Side */}
+            <div className="lg:col-span-1">
+              <Card className="bg-white">
+                <CardHeader>
+                  <CardTitle className="text-lg">Filter Patients</CardTitle>
+                  <CardDescription>Search by status</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button
+                    variant={statusFilter === "all" ? "default" : "outline"}
+                    className="w-full justify-between text-left"
+                    onClick={() => setStatusFilter("all")}
+                    data-testid="button-filter-all"
+                  >
+                    <span>All Patients</span>
+                    <span className="text-xs bg-gray-200 px-2 py-1 rounded">{patients?.length || 0}</span>
+                  </Button>
+                  <Button
+                    variant={statusFilter === "new" ? "default" : "outline"}
+                    className="w-full justify-between text-left"
+                    onClick={() => setStatusFilter("new")}
+                    data-testid="button-filter-new"
+                  >
+                    <span>New Patients</span>
+                    <span className="text-xs bg-blue-200 text-blue-900 px-2 py-1 rounded">{statusCounts.new}</span>
+                  </Button>
+                  <Button
+                    variant={statusFilter === "last-week" ? "default" : "outline"}
+                    className="w-full justify-between text-left"
+                    onClick={() => setStatusFilter("last-week")}
+                    data-testid="button-filter-last-week"
+                  >
+                    <span>Last Week</span>
+                    <span className="text-xs bg-purple-200 text-purple-900 px-2 py-1 rounded">{statusCounts.lastWeek}</span>
+                  </Button>
+                  <Button
+                    variant={statusFilter === "critical" ? "default" : "outline"}
+                    className="w-full justify-between text-left"
+                    onClick={() => setStatusFilter("critical")}
+                    data-testid="button-filter-critical"
+                  >
+                    <span>Critical</span>
+                    <span className="text-xs bg-red-200 text-red-900 px-2 py-1 rounded">{statusCounts.critical}</span>
+                  </Button>
+                  <Button
+                    variant={statusFilter === "low-risk" ? "default" : "outline"}
+                    className="w-full justify-between text-left"
+                    onClick={() => setStatusFilter("low-risk")}
+                    data-testid="button-filter-low-risk"
+                  >
+                    <span>Low Risk</span>
+                    <span className="text-xs bg-green-200 text-green-900 px-2 py-1 rounded">{statusCounts.lowRisk}</span>
+                  </Button>
+                  <Button
+                    variant={statusFilter === "booked" ? "default" : "outline"}
+                    className="w-full justify-between text-left"
+                    onClick={() => setStatusFilter("booked")}
+                    data-testid="button-filter-booked"
+                  >
+                    <span>Booked Appointment</span>
+                    <span className="text-xs bg-yellow-200 text-yellow-900 px-2 py-1 rounded">{statusCounts.booked}</span>
+                  </Button>
+                  <Button
+                    variant={statusFilter === "discharged" ? "default" : "outline"}
+                    className="w-full justify-between text-left"
+                    onClick={() => setStatusFilter("discharged")}
+                    data-testid="button-filter-discharged"
+                  >
+                    <span>Discharged</span>
+                    <span className="text-xs bg-gray-300 text-gray-900 px-2 py-1 rounded">{statusCounts.discharged}</span>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
 
-            <div className="text-sm text-gray-700 font-semibold">
-              Total Patients: <span data-testid="text-total-patients">{patients?.length || 0}</span>
-            </div>
+            {/* Patient Table - Main Section */}
+            <div className="lg:col-span-3 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="h-5 w-5 text-gray-600">📋</div>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {statusFilter === "all" 
+                    ? "Patient Records" 
+                    : `${statusFilter.replace(/-/g, " ").split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")} Patients`}
+                </h2>
+              </div>
 
-            <Card className="bg-white overflow-hidden">
-              {patientsLoading ? (
-                <div className="space-y-3 p-6">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-12 w-full" />
-                  ))}
-                </div>
-              ) : patients && patients.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="bg-blue-600 text-white">
-                        <th className="px-6 py-3 text-left text-sm font-semibold">Name</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold">Age</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold">Gender</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold">BP</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold">Temp (°C)</th>
-                        <th className="px-6 py-3 text-left text-sm font-semibold">Heart Rate</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {patients.map((patient) => (
-                        <tr
-                          key={patient.id}
-                          className="border-b hover:bg-gray-50 cursor-pointer transition"
-                          onClick={() => setLocation(`/patients/${patient.id}`)}
-                          data-testid={`row-patient-${patient.id}`}
-                        >
-                          <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                            {patient.firstName} {patient.lastName}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">{patient.age}</td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700 font-mono">
-                            {patient.bloodPressureSystolic && patient.bloodPressureDiastolic
-                              ? `${patient.bloodPressureSystolic}/${patient.bloodPressureDiastolic}`
-                              : "—"}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {patient.temperature || "—"}
-                          </td>
-                          <td className="px-6 py-4 text-sm text-gray-700">
-                            {patient.heartRate ? `${patient.heartRate} bpm` : "—"}
-                          </td>
+              <div className="text-sm text-gray-700 font-semibold">
+                Showing: <span data-testid="text-filtered-patients">{filteredPatients.length}</span> of <span data-testid="text-total-patients">{patients?.length || 0}</span> patients
+              </div>
+
+              <Card className="bg-white overflow-hidden">
+                {patientsLoading ? (
+                  <div className="space-y-3 p-6">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-12 w-full" />
+                    ))}
+                  </div>
+                ) : filteredPatients.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="bg-blue-600 text-white">
+                          <th className="px-6 py-3 text-left text-sm font-semibold">Name</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold">Age</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold">Gender</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold">BP</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold">Temp (°C)</th>
+                          <th className="px-6 py-3 text-left text-sm font-semibold">Heart Rate</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-600">No patients registered yet.</p>
-                </div>
-              )}
-            </Card>
+                      </thead>
+                      <tbody>
+                        {filteredPatients.map((patient) => (
+                          <tr
+                            key={patient.id}
+                            className="border-b hover:bg-gray-50 cursor-pointer transition"
+                            onClick={() => setLocation(`/patients/${patient.id}`)}
+                            data-testid={`row-patient-${patient.id}`}
+                          >
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                              {patient.firstName} {patient.lastName}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700">{patient.age}</td>
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              {patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700 font-mono">
+                              {patient.bloodPressureSystolic && patient.bloodPressureDiastolic
+                                ? `${patient.bloodPressureSystolic}/${patient.bloodPressureDiastolic}`
+                                : "—"}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              {patient.temperature || "—"}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-700">
+                              {patient.heartRate ? `${patient.heartRate} bpm` : "—"}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-600">No patients found for this filter.</p>
+                  </div>
+                )}
+              </Card>
+            </div>
           </div>
         </div>
       </div>
