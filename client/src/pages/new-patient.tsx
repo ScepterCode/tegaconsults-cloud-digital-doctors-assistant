@@ -303,7 +303,7 @@ export default function NewPatient() {
                   name="nin"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>National Identification Number *</FormLabel>
+                      <FormLabel>National ID Number (NIN)</FormLabel>
                       <FormControl>
                         <Input {...field} className="font-mono" placeholder="12345678901" data-testid="input-nin" />
                       </FormControl>
@@ -315,39 +315,57 @@ export default function NewPatient() {
 
               <Separator />
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Facial Recognition</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => handleCaptureBiometric("facial")}
-                    data-testid="button-capture-facial"
-                  >
-                    <Camera className="h-4 w-4 mr-2" />
-                    {facialData ? "Recapture Face" : "Capture Face"}
-                  </Button>
-                  {facialData && (
-                    <p className="text-xs text-success" data-testid="status-facial-captured">✓ Facial data captured</p>
-                  )}
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-base font-semibold">Identification Methods</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Select at least one identification method: NIN, Fingerprint, or Facial Recognition
+                  </p>
                 </div>
+                
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-2">
+                    <Label>National ID (NIN)</Label>
+                    <div className="p-3 border rounded-md bg-muted/50 space-y-2">
+                      <p className="text-xs text-muted-foreground">
+                        {form.getValues("nin") ? "✓ NIN entered" : "Enter NIN above"}
+                      </p>
+                    </div>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label>Fingerprint</Label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => handleCaptureBiometric("fingerprint")}
-                    data-testid="button-capture-fingerprint"
-                  >
-                    <Fingerprint className="h-4 w-4 mr-2" />
-                    {fingerprintData ? "Recapture Print" : "Capture Fingerprint"}
-                  </Button>
-                  {fingerprintData && (
-                    <p className="text-xs text-success" data-testid="status-fingerprint-captured">✓ Fingerprint captured</p>
-                  )}
+                  <div className="space-y-2">
+                    <Label>Facial Recognition</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => handleCaptureBiometric("facial")}
+                      data-testid="button-capture-facial"
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      {facialData ? "Recapture" : "Capture"}
+                    </Button>
+                    {facialData && (
+                      <p className="text-xs text-success" data-testid="status-facial-captured">✓ Facial data captured</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Fingerprint</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full justify-start"
+                      onClick={() => handleCaptureBiometric("fingerprint")}
+                      data-testid="button-capture-fingerprint"
+                    >
+                      <Fingerprint className="h-4 w-4 mr-2" />
+                      {fingerprintData ? "Recapture" : "Capture"}
+                    </Button>
+                    {fingerprintData && (
+                      <p className="text-xs text-success" data-testid="status-fingerprint-captured">✓ Fingerprint captured</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>

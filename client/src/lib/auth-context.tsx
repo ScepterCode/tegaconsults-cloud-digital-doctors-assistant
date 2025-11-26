@@ -14,7 +14,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     try {
       const stored = localStorage.getItem("user");
-      return stored && stored !== "undefined" ? JSON.parse(stored) : null;
+      if (!stored || stored === "undefined" || stored === "null") {
+        return null;
+      }
+      return JSON.parse(stored);
     } catch {
       return null;
     }
