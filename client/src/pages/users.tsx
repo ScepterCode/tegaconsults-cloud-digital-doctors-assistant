@@ -46,7 +46,8 @@ export default function Users() {
 
   const toggleUserMutation = useMutation({
     mutationFn: async ({ userId, isActive }: { userId: string; isActive: boolean }) => {
-      return await apiRequest("PATCH", `/api/users/${userId}`, { isActive: isActive ? 1 : 0 });
+      const res = await apiRequest("PATCH", `/api/users/${userId}`, { isActive: isActive ? 1 : 0 });
+      return await res.json();
     },
     onSuccess: (_, variables) => {
       toast({

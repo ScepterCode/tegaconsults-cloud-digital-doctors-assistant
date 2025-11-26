@@ -49,7 +49,8 @@ export default function PatientDetail() {
 
   const updatePatientMutation = useMutation({
     mutationFn: async (data: Partial<Patient>) => {
-      return await apiRequest("PATCH", `/api/patients/${patientId}`, data);
+      const res = await apiRequest("PATCH", `/api/patients/${patientId}`, data);
+      return await res.json();
     },
     onSuccess: () => {
       toast({

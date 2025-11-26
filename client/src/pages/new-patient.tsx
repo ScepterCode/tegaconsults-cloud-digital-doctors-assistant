@@ -91,11 +91,12 @@ export default function NewPatient() {
 
   const createPatientMutation = useMutation({
     mutationFn: async (data: PatientFormData) => {
-      return await apiRequest("POST", "/api/patients", {
+      const res = await apiRequest("POST", "/api/patients", {
         ...data,
         facialRecognitionData: facialData,
         fingerprintData: fingerprintData,
       });
+      return await res.json();
     },
     onSuccess: () => {
       toast({
