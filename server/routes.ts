@@ -161,6 +161,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search patients by name, NIN, fingerprint, or facial recognition
+  app.post("/api/patients/search", async (req, res) => {
+    try {
+      const { query, searchType } = req.body;
+
+      if (!query) {
+        return res.status(400).json({ message: "Search query is required" });
+      }
+
+      let patient: any = null;
+
+      if (searchType === "nin") {
+        patient = await storage.getPatientByNIN(query);
+      } else if (searchType === "fingerprint") {
+        patient = await storage.getPatientByFingerprint(query);
+      } else if (searchType === "facial") {
+        patient = await storage.getPatientByFacial(query);
+      } else {
+        // Default: search by name or NIN
+        const results = await storage.searchPatients(query);
+        return res.json(results);
+      }
+
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      return res.json([patient]);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // ML Health Analysis - Predict health risk, suggest diagnosis, prescribe drugs
   app.get("/api/patients/:id/health-analysis", async (req, res) => {
     try {

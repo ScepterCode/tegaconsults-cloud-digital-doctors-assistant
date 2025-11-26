@@ -15,6 +15,10 @@ export interface IStorage {
   // Patient operations
   getPatient(id: string): Promise<Patient | undefined>;
   getPatientByMRN(mrn: string): Promise<Patient | undefined>;
+  getPatientByNIN(nin: string): Promise<Patient | undefined>;
+  getPatientByFingerprint(fingerprintData: string): Promise<Patient | undefined>;
+  getPatientByFacial(facialData: string): Promise<Patient | undefined>;
+  searchPatients(query: string): Promise<Patient[]>;
   createPatient(patient: InsertPatient): Promise<Patient>;
   getAllPatients(): Promise<Patient[]>;
   updatePatient(id: string, updates: Partial<Patient>): Promise<Patient | undefined>;
@@ -143,6 +147,34 @@ export class MemStorage implements IStorage {
   async getPatientByMRN(mrn: string): Promise<Patient | undefined> {
     return Array.from(this.patients.values()).find(
       (patient) => patient.mrn === mrn,
+    );
+  }
+
+  async getPatientByNIN(nin: string): Promise<Patient | undefined> {
+    return Array.from(this.patients.values()).find(
+      (patient) => patient.nin.toLowerCase() === nin.toLowerCase(),
+    );
+  }
+
+  async getPatientByFingerprint(fingerprintData: string): Promise<Patient | undefined> {
+    return Array.from(this.patients.values()).find(
+      (patient) => patient.fingerprintData === fingerprintData,
+    );
+  }
+
+  async getPatientByFacial(facialData: string): Promise<Patient | undefined> {
+    return Array.from(this.patients.values()).find(
+      (patient) => patient.facialRecognitionData === facialData,
+    );
+  }
+
+  async searchPatients(query: string): Promise<Patient[]> {
+    const lowerQuery = query.toLowerCase();
+    return Array.from(this.patients.values()).filter((patient) => 
+      patient.firstName.toLowerCase().includes(lowerQuery) ||
+      patient.lastName.toLowerCase().includes(lowerQuery) ||
+      patient.nin.toLowerCase().includes(lowerQuery) ||
+      patient.mrn.toLowerCase().includes(lowerQuery)
     );
   }
 
