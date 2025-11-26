@@ -33,6 +33,7 @@ export class MemStorage implements IStorage {
     this.users = new Map();
     this.patients = new Map();
     this.seedDefaultUsers();
+    this.seedDefaultPatients();
   }
 
   private seedDefaultUsers() {
@@ -70,6 +71,144 @@ export class MemStorage implements IStorage {
         isActive: user.isActive ?? 1,
       };
       this.users.set(id, newUser);
+    });
+  }
+
+  private seedDefaultPatients() {
+    // Get a doctor user for registering patients
+    const doctorUser = Array.from(this.users.values()).find(u => u.role === "doctor");
+    const registeredBy = doctorUser?.id || "system";
+
+    // Seed default patients with comprehensive data
+    const defaultPatients: InsertPatient[] = [
+      {
+        firstName: "Tega",
+        lastName: "Team",
+        age: 20,
+        gender: "male",
+        phoneNumber: "08123456789",
+        email: "tega.team@email.com",
+        address: "123 Health Street, Medical District",
+        mrn: "MRN-20250001",
+        nin: "12345678901",
+        bloodGroup: "O+",
+        genotype: "AA",
+        allergies: "None",
+        symptoms: "Fever, fatigue",
+        bloodPressureSystolic: 130,
+        bloodPressureDiastolic: 90,
+        temperature: "45",
+        heartRate: 88,
+        weight: "75",
+        facialRecognitionData: "facial_tega_team_001",
+        fingerprintData: "fingerprint_tega_team_001",
+        registeredBy,
+      },
+      {
+        firstName: "Chioma",
+        lastName: "Okafor",
+        age: 35,
+        gender: "female",
+        phoneNumber: "08198765432",
+        email: "chioma.okafor@email.com",
+        address: "456 Wellness Avenue, Health Hub",
+        mrn: "MRN-20250002",
+        nin: "98765432101",
+        bloodGroup: "A+",
+        genotype: "AS",
+        allergies: "Penicillin",
+        symptoms: "Hypertension, fatigue",
+        bloodPressureSystolic: 165,
+        bloodPressureDiastolic: 105,
+        temperature: "36.8",
+        heartRate: 92,
+        weight: "68",
+        facialRecognitionData: "facial_chioma_okafor_001",
+        fingerprintData: "fingerprint_chioma_okafor_001",
+        registeredBy,
+      },
+      {
+        firstName: "Adeyemi",
+        lastName: "Adeleke",
+        age: 62,
+        gender: "male",
+        phoneNumber: "08134567890",
+        email: "adeyemi.adeleke@email.com",
+        address: "789 Senior Care Lane, Retirement Community",
+        mrn: "MRN-20250003",
+        nin: "11223344556",
+        bloodGroup: "B+",
+        genotype: "AA",
+        allergies: "Aspirin",
+        symptoms: "Chest pain, shortness of breath",
+        bloodPressureSystolic: 175,
+        bloodPressureDiastolic: 110,
+        temperature: "37.2",
+        heartRate: 105,
+        weight: "82",
+        facialRecognitionData: "facial_adeyemi_adeleke_001",
+        fingerprintData: "fingerprint_adeyemi_adeleke_001",
+        registeredBy,
+      },
+      {
+        firstName: "Zainab",
+        lastName: "Hassan",
+        age: 28,
+        gender: "female",
+        phoneNumber: "07089876543",
+        email: "zainab.hassan@email.com",
+        address: "321 Young Adults Plaza, Downtown",
+        mrn: "MRN-20250004",
+        nin: "55667788990",
+        bloodGroup: "AB-",
+        genotype: "AA",
+        allergies: "Sulfonamides",
+        symptoms: "Migraine, nausea",
+        bloodPressureSystolic: 118,
+        bloodPressureDiastolic: 76,
+        temperature: "36.5",
+        heartRate: 72,
+        weight: "62",
+        facialRecognitionData: "facial_zainab_hassan_001",
+        fingerprintData: "fingerprint_zainab_hassan_001",
+        registeredBy,
+      },
+      {
+        firstName: "Emeka",
+        lastName: "Nwankwo",
+        age: 19,
+        gender: "male",
+        phoneNumber: "08156789012",
+        email: "emeka.nwankwo@email.com",
+        address: "654 Youth Center, Campus District",
+        mrn: "MRN-20250005",
+        nin: "44556677889",
+        bloodGroup: "O-",
+        genotype: "SS",
+        allergies: "None documented",
+        symptoms: "Acute pain, fever",
+        bloodPressureSystolic: 128,
+        bloodPressureDiastolic: 82,
+        temperature: "38.5",
+        heartRate: 95,
+        weight: "70",
+        facialRecognitionData: "facial_emeka_nwankwo_001",
+        fingerprintData: "fingerprint_emeka_nwankwo_001",
+        registeredBy,
+      },
+    ];
+
+    defaultPatients.forEach(patient => {
+      const id = randomUUID();
+      const now = new Date();
+      const newPatient: Patient = {
+        ...patient,
+        id,
+        createdAt: now,
+        updatedAt: now,
+        lastUpdatedBy: registeredBy,
+      };
+      this.patients.set(id, newPatient);
     });
   }
 
