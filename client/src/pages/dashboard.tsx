@@ -182,6 +182,56 @@ export default function Dashboard() {
     death: (patients || []).filter(p => getPatientStatus(p).isDeath).length,
   };
 
+  // Patient-specific dashboard view
+  if (user?.role === "patient") {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">My Health Dashboard</h1>
+          <p className="text-muted-foreground">Welcome, {user?.fullName}</p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>My Appointments</CardTitle>
+              <CardDescription>View and manage your appointments</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => setLocation("/appointments")} className="w-full">
+                View Appointments
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>My Health Records</CardTitle>
+              <CardDescription>Access your medical history and vitals</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => setLocation("/patients/" + user?.id)} variant="outline" className="w-full">
+                View Records
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Billing & Subscriptions</CardTitle>
+              <CardDescription>Manage your billing information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => setLocation("/billing")} variant="outline" className="w-full">
+                View Billing
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
