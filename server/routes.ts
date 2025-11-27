@@ -561,6 +561,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin Department Routes
+  app.get("/api/admin/departments/:adminId", async (req, res) => {
+    try {
+      const { adminId } = req.params;
+      const departments = await storage.getDepartmentsByHospital(adminId);
+      return res.json(departments);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.get("/api/admin/departments/staff", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const staffCounts: Record<string, number> = {};
+      
+      users.forEach((u) => {
+        if (u.departmentId && (u.role === "doctor" || u.role === "nurse")) {
+          staffCounts[u.departmentId] = (staffCounts[u.departmentId] || 0) + 1;
+        }
+      });
+
+      return res.json(staffCounts);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
   // Department Notifications Routes
   app.get("/api/departments/:departmentId/notifications", async (req, res) => {
     try {

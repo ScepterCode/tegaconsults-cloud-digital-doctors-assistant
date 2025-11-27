@@ -22,6 +22,7 @@ import PatientAppointments from "@/pages/patient-appointments";
 import DoctorAppointments from "@/pages/doctor-appointments";
 import Billing from "@/pages/billing";
 import DepartmentDashboard from "@/pages/department-dashboard";
+import AdminDepartments from "@/pages/admin-departments";
 import NotFound from "@/pages/not-found";
 
 function AppRoutes() {
@@ -108,6 +109,11 @@ function AppRoutes() {
                     <DepartmentDashboard />
                   </ProtectedRoute>
                 </Route>
+                <Route path="/admin/departments">
+                  <ProtectedRoute requiredRoles={["admin"]}>
+                    <AdminDepartments />
+                  </ProtectedRoute>
+                </Route>
                 <Route path="/">
                   <Redirect to="/dashboard" />
                 </Route>
@@ -129,8 +135,8 @@ export default function App() {
       <TooltipProvider>
         <AuthProvider>
           <AppRoutes />
+          <Toaster />
         </AuthProvider>
-        <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
   );

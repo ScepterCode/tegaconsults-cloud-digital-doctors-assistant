@@ -83,6 +83,12 @@ export function AppSidebar() {
       icon: Building2,
       roles: ["doctor", "nurse"],
     },
+    {
+      title: "Department Management",
+      url: "/admin/departments",
+      icon: Building2,
+      roles: ["admin"],
+    },
   ];
 
   const filteredMenuItems = menuItems.filter(item => 
