@@ -1,14 +1,12 @@
 services:
   - type: web
     name: digital-doctors-assistant
-    env: node
+    runtime: node
     plan: free
-    buildCommand: npm run build
+    buildCommand: npm ci && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
       - key: OPENAI_API_KEY
         sync: false
