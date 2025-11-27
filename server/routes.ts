@@ -6,6 +6,7 @@ import { MLHealthService } from "./ml-service";
 import { OpenAIService } from "./openai-service";
 import { NLPService } from "./nlp-service";
 import { AdvancedLLMService } from "./advanced-llm-service";
+import { mlTrainingService } from "./ml-training-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -800,6 +801,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ guidelines });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============================================
+  // Custom ML Training Routes
+  // ============================================
+
+  // Train a custom ML model
+  app.post("/api/ml/train", async (req, res) => {
+    try {
+      const { modelType } = req.body;
+      if (!modelType || !["risk_prediction", "diagnosis_classification", "patient_clustering"].includes(modelType)) {
+        return res.status(400).json({ message: "Valid modelType required: risk_prediction, diagnosis_classification, patient_clustering" });
+      }
+
+      const session = await mlTrainingService.trainModel(modelType);
+      return res.json({ session, message: "Model training completed successfully" });
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message || "Training failed" });
+    }
+  });
+
+  // Get training session details
+  app.get("/api/ml/sessions/:sessionId", async (req, res) => {
+    try {
+      const { sessionId } = req.params;
+      const session = mlTrainingService.getSession(sessionId);
+
+      if (!session) {
+        return res.status(404).json({ message: "Training session not found" });
+      }
+
+      return res.json(session);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // List all training sessions
+  app.get("/api/ml/sessions", async (req, res) => {
+    try {
+      const sessions = mlTrainingService.getAllSessions();
+      return res.json({ sessions, total: sessions.length });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Make prediction using trained model
+  app.post("/api/ml/predict", async (req, res) => {
+    try {
+      const { sessionId, patientId } = req.body;
+
+      if (!sessionId || !patientId) {
+        return res.status(400).json({ message: "sessionId and patientId required" });
+      }
+
+      const patient = await storage.getPatient(patientId);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      const prediction = mlTrainingService.predict(sessionId, patient);
+      return res.json(prediction);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message || "Prediction failed" });
+    }
+  });
+
+  // Cross-validation evaluation
+  app.post("/api/ml/evaluate-cv", async (req, res) => {
+    try {
+      const { modelType, folds } = req.body;
+
+      if (!modelType) {
+        return res.status(400).json({ message: "modelType required" });
+      }
+
+      const cvResults = await mlTrainingService.evaluateWithCrossValidation(modelType, folds || 5);
+      return res.json(cvResults);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message || "Evaluation failed" });
+    }
+  });
+
+  // Get feature importance
+  app.get("/api/ml/feature-importance/:modelType", async (req, res) => {
+    try {
+      const { modelType } = req.params;
+
+      if (!["risk_prediction", "diagnosis_classification", "patient_clustering"].includes(modelType)) {
+        return res.status(400).json({ message: "Invalid modelType" });
+      }
+
+      const importance = await mlTrainingService.getFeatureImportance(modelType as any);
+      return res.json(importance);
+    } catch (error: any) {
+      return res.status(500).json({ message: error.message || "Feature importance calculation failed" });
     }
   });
 
