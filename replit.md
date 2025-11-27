@@ -33,6 +33,34 @@ Preferred communication style: Simple, everyday language.
 
 ### Backend Architecture
 
+**Dual Backend Implementation**: The system supports both Node.js/Express and Python/FastAPI backends.
+
+#### Python Backend (Primary - `server_py/`)
+
+**Server Framework**: FastAPI with Python 3.11
+- Async RESTful API design with automatic OpenAPI documentation
+- SQLAlchemy 2.0 ORM with async support + PostgreSQL (Neon serverless via psycopg2)
+- Pydantic schemas for request/response validation
+- Database persistence with automatic schema synchronization
+
+**Python Backend Structure**:
+- `server_py/main.py` - FastAPI application factory and startup initialization
+- `server_py/config.py` - Pydantic Settings configuration
+- `server_py/db/session.py` - SQLAlchemy async engine and session management
+- `server_py/models/` - SQLAlchemy ORM models (User, Patient, Appointment, LabResult, etc.)
+- `server_py/schemas/` - Pydantic schemas for validation
+- `server_py/api/` - FastAPI routers for all endpoints
+- `server_py/services/` - Business logic (ML, NLP, OpenAI, Advanced LLM services)
+
+**Running Python Backend**:
+```bash
+./run_python_backend.sh
+# or manually:
+PYTHONPATH=. python -m uvicorn server_py.main:app --host 0.0.0.0 --port 5000 --reload
+```
+
+#### Node.js Backend (Legacy - `server/`)
+
 **Server Framework**: Express.js with TypeScript
 - RESTful API design pattern
 - ProductionStorage class with Drizzle ORM + PostgreSQL (Neon serverless)
@@ -143,6 +171,7 @@ Preferred communication style: Simple, everyday language.
 3. **Enhanced LLM Services**: Implemented drug alternatives, treatment planning, outcome prediction, and evidence-based guidelines
 4. **New API Endpoints**: 10+ new endpoints for NLP and advanced LLM features
 5. **Database Initialization**: Automatic seeding with default users and sample patients on first run
+6. **Python/FastAPI Backend**: Complete Python backend implementation with all features ported from Node.js/Express
 
 ## Default Login Credentials
 
@@ -158,3 +187,13 @@ Preferred communication style: Simple, everyday language.
 - **Start Command**: `npm run start`
 - **Environment**: NODE_ENV=production with DATABASE_URL from Neon
 - **Data Persistence**: All data persists across deployments via PostgreSQL
+
+## Switching Between Backends
+
+To switch to the Python backend:
+1. Run `./run_python_backend.sh` in the shell
+2. Or run: `PYTHONPATH=. python -m uvicorn server_py.main:app --host 0.0.0.0 --port 5000 --reload`
+
+The Node.js backend remains as the default workflow configuration.
+
+Both backends share the same PostgreSQL database and maintain identical API contracts.
