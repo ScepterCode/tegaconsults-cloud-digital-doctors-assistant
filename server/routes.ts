@@ -514,12 +514,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/subscription/:adminUserId/upgrade", async (req, res) => {
     try {
       const { adminUserId } = req.params;
-      const { billingCycle } = req.body; // "monthly" or "yearly"
+      const { billingCycle, paymentMethod, cardDetails } = req.body; // "monthly" or "yearly"
+
+      if (!billingCycle || !["monthly", "yearly"].includes(billingCycle)) {
+        return res.status(400).json({ message: "Invalid billing cycle" });
+      }
+
+      if (!paymentMethod || !["bank", "paystack", "card"].includes(paymentMethod)) {
+        return res.status(400).json({ message: "Invalid payment method" });
+      }
 
       const subscription = await storage.updateSubscription(adminUserId, {
         tier: "hospital",
         status: "active",
         billingCycle,
+        paymentMethod,
         subscriptionStartDate: new Date(),
         subscriptionEndDate: new Date(Date.now() + (billingCycle === "yearly" ? 365 * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000)),
       });

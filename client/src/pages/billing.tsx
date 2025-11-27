@@ -3,7 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, AlertCircle, Copy, CheckCircle2 } from "lucide-react";
+import { Check, AlertCircle, Copy, CheckCircle2, CreditCard } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +15,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Billing() {
   const { user } = useAuth();
@@ -23,8 +31,19 @@ export default function Billing() {
   const adminUserId = isAdmin ? user?.id : user?.hospitalAdminId;
   const [paymentDialog, setPaymentDialog] = useState(false);
   const [selectedBilling, setSelectedBilling] = useState<"monthly" | "yearly" | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState<"bank" | "paystack" | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"bank" | "paystack" | "card" | null>(null);
   const [copiedBank, setCopiedBank] = useState(false);
+  const [cardData, setCardData] = useState({
+    email: "",
+    cardNumber: "",
+    expiry: "",
+    cvc: "",
+    cardholderName: "",
+    country: "Nigeria",
+    address1: "",
+    address2: "",
+    suburb: "",
+  });
 
   const { data: subscription, isLoading } = useQuery<Subscription>({
     queryKey: ["/api/subscription", adminUserId],
@@ -32,10 +51,11 @@ export default function Billing() {
   });
 
   const upgradeMutation = useMutation({
-    mutationFn: async (data: { billingCycle: "monthly" | "yearly"; paymentMethod: "bank" | "paystack" }) => {
+    mutationFn: async (data: { billingCycle: "monthly" | "yearly"; paymentMethod: "bank" | "paystack" | "card"; cardDetails?: typeof cardData }) => {
       const res = await apiRequest("POST", `/api/subscription/${adminUserId}/upgrade`, {
         billingCycle: data.billingCycle,
         paymentMethod: data.paymentMethod,
+        ...(data.cardDetails && { cardDetails: data.cardDetails }),
       });
       return await res.json();
     },
@@ -71,6 +91,19 @@ export default function Billing() {
 
   const handleBankPayment = () => {
     upgradeMutation.mutate({ billingCycle: selectedBilling!, paymentMethod: "bank" });
+    setPaymentDialog(false);
+  };
+
+  const handleCardPayment = () => {
+    if (!cardData.email || !cardData.cardNumber || !cardData.expiry || !cardData.cvc || !cardData.cardholderName) {
+      toast({
+        title: "Error",
+        description: "Please fill in all card details",
+        variant: "destructive",
+      });
+      return;
+    }
+    upgradeMutation.mutate({ billingCycle: selectedBilling!, paymentMethod: "card", cardDetails: cardData });
     setPaymentDialog(false);
   };
 
@@ -399,6 +432,133 @@ export default function Billing() {
               </div>
             </div>
 
+            {/* Card Payment Option */}
+            <div className="border rounded-lg p-4 space-y-3 hover-elevate cursor-pointer" onClick={() => setPaymentMethod("card")}>
+              <div className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="card"
+                  checked={paymentMethod === "card"}
+                  onChange={() => setPaymentMethod("card")}
+                  className="mt-1"
+                  data-testid="radio-card"
+                />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-sm">Card</h3>
+                    <CreditCard className="h-4 w-4" />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">Direct card payment</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Card Details Form - Show when selected */}
+            {paymentMethod === "card" && (
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground">Email</label>
+                  <Input
+                    type="email"
+                    placeholder="contact@hospital.com"
+                    value={cardData.email}
+                    onChange={(e) => setCardData({ ...cardData, email: e.target.value })}
+                    data-testid="input-card-email"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground">Card Number</label>
+                  <Input
+                    placeholder="1234 1234 1234 1234"
+                    value={cardData.cardNumber}
+                    onChange={(e) => setCardData({ ...cardData, cardNumber: e.target.value.replace(/\s/g, "").slice(0, 16) })}
+                    data-testid="input-card-number"
+                    className="mt-1 font-mono"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground">MM / YY</label>
+                    <Input
+                      placeholder="MM/YY"
+                      value={cardData.expiry}
+                      onChange={(e) => setCardData({ ...cardData, expiry: e.target.value.slice(0, 5) })}
+                      data-testid="input-card-expiry"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-muted-foreground">CVC</label>
+                    <Input
+                      placeholder="123"
+                      value={cardData.cvc}
+                      onChange={(e) => setCardData({ ...cardData, cvc: e.target.value.slice(0, 4) })}
+                      data-testid="input-card-cvc"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground">Cardholder Name</label>
+                  <Input
+                    placeholder="Full name on card"
+                    value={cardData.cardholderName}
+                    onChange={(e) => setCardData({ ...cardData, cardholderName: e.target.value })}
+                    data-testid="input-cardholder-name"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-muted-foreground">Billing Address</label>
+                  <Select value={cardData.country} onValueChange={(value) => setCardData({ ...cardData, country: value })}>
+                    <SelectTrigger className="mt-1" data-testid="select-country">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Nigeria">Nigeria</SelectItem>
+                      <SelectItem value="Ghana">Ghana</SelectItem>
+                      <SelectItem value="Kenya">Kenya</SelectItem>
+                      <SelectItem value="South Africa">South Africa</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Input
+                    placeholder="Address line 1"
+                    value={cardData.address1}
+                    onChange={(e) => setCardData({ ...cardData, address1: e.target.value })}
+                    data-testid="input-address-line1"
+                  />
+                </div>
+
+                <div>
+                  <Input
+                    placeholder="Address line 2"
+                    value={cardData.address2}
+                    onChange={(e) => setCardData({ ...cardData, address2: e.target.value })}
+                    data-testid="input-address-line2"
+                  />
+                </div>
+
+                <div>
+                  <Input
+                    placeholder="Suburb/City"
+                    value={cardData.suburb}
+                    onChange={(e) => setCardData({ ...cardData, suburb: e.target.value })}
+                    data-testid="input-suburb"
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex gap-3 pt-4 border-t">
               <Button
@@ -417,6 +577,8 @@ export default function Billing() {
                     handleBankPayment();
                   } else if (paymentMethod === "paystack") {
                     handlePaystackPayment();
+                  } else if (paymentMethod === "card") {
+                    handleCardPayment();
                   }
                 }}
                 disabled={!paymentMethod || upgradeMutation.isPending}
