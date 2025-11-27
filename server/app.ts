@@ -6,8 +6,12 @@ import express, {
   Response,
   NextFunction,
 } from "express";
+import session from "express-session";
+import pgSession from "connect-pg-simple";
+import { Client } from "pg";
 
 import { registerRoutes } from "./routes";
+import { storage } from "./production-storage";
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -67,6 +71,28 @@ app.use((req, res, next) => {
 export default async function runApp(
   setup: (app: Express, server: Server) => Promise<void>,
 ) {
+  // Initialize database with seed data
+  log("Initializing database...");
+  await storage.initialize();
+  log("Database initialized successfully");
+
+  // Configure PostgreSQL session store
+  if (process.env.DATABASE_URL) {
+    const pgSessionStore = pgSession(session);
+    app.use(
+      session({
+        store: new pgSessionStore({
+          conString: process.env.DATABASE_URL,
+          tableName: "session",
+        }),
+        secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+        resave: false,
+        saveUninitialized: false,
+        cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }, // 30 days
+      })
+    );
+  }
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
