@@ -8,7 +8,6 @@ import express, {
 } from "express";
 import session from "express-session";
 import pgSession from "connect-pg-simple";
-import { Client } from "pg";
 
 import { registerRoutes } from "./routes";
 import { storage } from "./production-storage";
@@ -76,22 +75,15 @@ export default async function runApp(
   await storage.initialize();
   log("Database initialized successfully");
 
-  // Configure PostgreSQL session store
-  if (process.env.DATABASE_URL) {
-    const pgSessionStore = pgSession(session);
-    app.use(
-      session({
-        store: new pgSessionStore({
-          conString: process.env.DATABASE_URL,
-          tableName: "session",
-        }),
-        secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
-        resave: false,
-        saveUninitialized: false,
-        cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }, // 30 days
-      })
-    );
-  }
+  // Configure session store (use memory for now - PostgreSQL session store requires TCP connection)
+  app.use(
+    session({
+      secret: process.env.SESSION_SECRET || "your-secret-key-change-in-production",
+      resave: false,
+      saveUninitialized: false,
+      cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 }, // 30 days
+    })
+  );
 
   const server = await registerRoutes(app);
 
