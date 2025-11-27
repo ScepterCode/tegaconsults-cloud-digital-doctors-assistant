@@ -150,14 +150,25 @@ export default function Billing() {
               </div>
 
               {isHospitalActive && (
-                <Button
-                  variant="destructive"
-                  onClick={() => cancelMutation.mutate()}
-                  disabled={cancelMutation.isPending}
-                  data-testid="button-cancel-subscription"
-                >
-                  {cancelMutation.isPending ? "Cancelling..." : "Cancel Subscription"}
-                </Button>
+                <div className="space-y-4 pt-4 border-t">
+                  <div className="bg-red-50 border border-red-200 rounded-md p-4 flex gap-3">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-red-900">Warning</h4>
+                      <p className="text-sm text-red-800 mt-1">
+                        If you cancel your subscription, all hospital records will be lost permanently.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    onClick={() => cancelMutation.mutate()}
+                    disabled={cancelMutation.isPending}
+                    data-testid="button-cancel-subscription"
+                  >
+                    {cancelMutation.isPending ? "Cancelling..." : "Cancel Subscription"}
+                  </Button>
+                </div>
               )}
             </CardContent>
           </Card>
