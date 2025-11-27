@@ -32,7 +32,7 @@ const registerSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string().min(6, "Password confirmation required"),
   fullName: z.string().min(2, "Full name is required"),
-  role: z.enum(["doctor", "nurse", "admin"], {
+  role: z.enum(["patient", "doctor", "nurse", "admin"], {
     errorMap: () => ({ message: "Please select a role" }),
   }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -53,7 +53,7 @@ export default function Register() {
       password: "",
       confirmPassword: "",
       fullName: "",
-      role: "doctor",
+      role: "patient",
     },
   });
 
@@ -104,7 +104,7 @@ export default function Register() {
           </div>
           <CardTitle className="text-2xl">Create Account</CardTitle>
           <CardDescription>
-            Register as a doctor, nurse, or administrator to get started with the Digital Doctors Assistant
+            Register as a patient, doctor, nurse, or administrator to get started
           </CardDescription>
         </CardHeader>
 
@@ -142,6 +142,7 @@ export default function Register() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="patient">Patient</SelectItem>
                         <SelectItem value="doctor">Doctor</SelectItem>
                         <SelectItem value="nurse">Nurse</SelectItem>
                         <SelectItem value="admin">Administrator</SelectItem>
