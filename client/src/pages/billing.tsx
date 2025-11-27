@@ -239,11 +239,14 @@ export default function Billing() {
 
                   <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => upgradeMutation.mutate("monthly")}
-                    disabled={upgradeMutation.isPending || isHospitalActive}
+                    onClick={() => {
+                      setSelectedBilling("monthly");
+                      setPaymentDialog(true);
+                    }}
+                    disabled={isHospitalActive}
                     data-testid="button-upgrade-monthly"
                   >
-                    {isHospitalActive ? "Current Plan" : upgradeMutation.isPending ? "Processing..." : "Upgrade Now"}
+                    {isHospitalActive ? "Current Plan" : "Upgrade Now"}
                   </Button>
                 </CardContent>
               </Card>
@@ -281,11 +284,14 @@ export default function Billing() {
 
                   <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
-                    onClick={() => upgradeMutation.mutate("yearly")}
-                    disabled={upgradeMutation.isPending || isHospitalActive}
+                    onClick={() => {
+                      setSelectedBilling("yearly");
+                      setPaymentDialog(true);
+                    }}
+                    disabled={isHospitalActive}
                     data-testid="button-upgrade-yearly"
                   >
-                    {isHospitalActive ? "Current Plan" : upgradeMutation.isPending ? "Processing..." : "Upgrade Now"}
+                    {isHospitalActive ? "Current Plan" : "Upgrade Now"}
                   </Button>
                 </CardContent>
               </Card>
@@ -311,6 +317,118 @@ export default function Billing() {
           )}
         </>
       )}
+
+      {/* Payment Method Selection Dialog */}
+      <Dialog open={paymentDialog} onOpenChange={setPaymentDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Payment Method</DialogTitle>
+            <DialogDescription>
+              {selectedBilling === "monthly"
+                ? "₦15,000 per month - All staff get full access"
+                : "₦100,000 per year - All staff get full access"}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Bank Transfer Option */}
+            <div className="border rounded-lg p-4 space-y-3 hover-elevate cursor-pointer" onClick={() => setPaymentMethod("bank")}>
+              <div className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="bank"
+                  checked={paymentMethod === "bank"}
+                  onChange={() => setPaymentMethod("bank")}
+                  className="mt-1"
+                  data-testid="radio-bank-transfer"
+                />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm">Bank Transfer</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Transfer to Zenith Bank</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bank Details - Show when selected */}
+            {paymentMethod === "bank" && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground font-semibold">Bank</p>
+                  <p className="text-sm font-semibold">Zenith Bank</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground font-semibold">Account Number</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-sm font-mono font-bold">1228732577</p>
+                    <button
+                      onClick={handleCopyBank}
+                      className="p-1 hover-elevate rounded"
+                      data-testid="button-copy-account"
+                    >
+                      {copiedBank ? (
+                        <CheckCircle2 className="h-4 w-4 text-green-600" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                </div>
+                <div className="text-xs text-blue-700 bg-blue-100 rounded p-2">
+                  Please note your reference ID for verification after transfer
+                </div>
+              </div>
+            )}
+
+            {/* Paystack Option */}
+            <div className="border rounded-lg p-4 space-y-3 hover-elevate cursor-pointer" onClick={() => setPaymentMethod("paystack")}>
+              <div className="flex items-start gap-3">
+                <input
+                  type="radio"
+                  name="payment"
+                  value="paystack"
+                  checked={paymentMethod === "paystack"}
+                  onChange={() => setPaymentMethod("paystack")}
+                  className="mt-1"
+                  data-testid="radio-paystack"
+                />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm">Paystack</h3>
+                  <p className="text-xs text-muted-foreground mt-1">Online card payment</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPaymentDialog(false);
+                  setPaymentMethod(null);
+                }}
+                data-testid="button-cancel-payment"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  if (paymentMethod === "bank") {
+                    handleBankPayment();
+                  } else if (paymentMethod === "paystack") {
+                    handlePaystackPayment();
+                  }
+                }}
+                disabled={!paymentMethod || upgradeMutation.isPending}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                data-testid="button-proceed-payment"
+              >
+                {upgradeMutation.isPending ? "Processing..." : "Proceed"}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
