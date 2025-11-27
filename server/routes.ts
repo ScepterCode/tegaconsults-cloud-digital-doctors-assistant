@@ -4,6 +4,8 @@ import { storage } from "./production-storage";
 import { loginSchema, registerSchema, insertPatientSchema, insertAppointmentSchema, insertNotificationSchema, type User } from "@shared/schema";
 import { MLHealthService } from "./ml-service";
 import { OpenAIService } from "./openai-service";
+import { NLPService } from "./nlp-service";
+import { AdvancedLLMService } from "./advanced-llm-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -628,6 +630,174 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       return res.json(notification);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // ============================================
+  // Advanced ML/NLP Feature Routes
+  // ============================================
+
+  // NLP Analysis - Extract medical entities from text
+  app.post("/api/nlp/analyze", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+
+      const analysis = NLPService.analyzeText(text);
+      return res.json(analysis);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // NLP - Symptom normalization
+  app.post("/api/nlp/normalize-symptoms", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+
+      const normalized = NLPService.normalizeSymptoms(text);
+      return res.json({ symptoms: normalized });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // NLP - Medical entity extraction
+  app.post("/api/nlp/extract-entities", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+
+      const entities = NLPService.extractEntities(text);
+      return res.json({ entities });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // NLP - Detect urgency from text
+  app.post("/api/nlp/detect-urgency", async (req, res) => {
+    try {
+      const { text } = req.body;
+      if (!text) {
+        return res.status(400).json({ message: "Text is required" });
+      }
+
+      const urgency = NLPService.detectUrgency(text);
+      return res.json({ urgency });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Advanced LLM - Get drug alternatives
+  app.post("/api/llm/drug-alternatives", async (req, res) => {
+    try {
+      const { primaryDrug, indication, allergies } = req.body;
+      if (!primaryDrug || !indication) {
+        return res.status(400).json({ message: "Primary drug and indication are required" });
+      }
+
+      const alternatives = await AdvancedLLMService.getDrugAlternatives(
+        primaryDrug,
+        indication,
+        allergies
+      );
+      return res.json({ alternatives });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Advanced LLM - Generate treatment plan
+  app.post("/api/llm/treatment-plan", async (req, res) => {
+    try {
+      const { diagnosis, symptoms, patientId } = req.body;
+      if (!diagnosis || !symptoms || !patientId) {
+        return res.status(400).json({ message: "Diagnosis, symptoms, and patientId are required" });
+      }
+
+      const patient = await storage.getPatient(patientId);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      const plan = await AdvancedLLMService.generateTreatmentPlan(diagnosis, symptoms, patient);
+      return res.json(plan);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Advanced LLM - Check drug interactions
+  app.post("/api/llm/check-interactions", async (req, res) => {
+    try {
+      const { drugs } = req.body;
+      if (!drugs || !Array.isArray(drugs)) {
+        return res.status(400).json({ message: "Drugs array is required" });
+      }
+
+      const interactions = NLPService.checkDrugInteractions(drugs);
+      return res.json({ interactions });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Advanced LLM - Check allergy conflicts
+  app.post("/api/llm/check-allergies", async (req, res) => {
+    try {
+      const { allergies, prescribedDrugs } = req.body;
+      if (!prescribedDrugs || !Array.isArray(prescribedDrugs)) {
+        return res.status(400).json({ message: "Prescribed drugs array is required" });
+      }
+
+      const conflicts = NLPService.checkAllergyConflicts(allergies, prescribedDrugs);
+      return res.json({ conflicts });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Advanced LLM - Predict patient outcomes
+  app.post("/api/llm/predict-outcome", async (req, res) => {
+    try {
+      const { diagnosis, adherence, riskFactors, patientAge } = req.body;
+      if (diagnosis === undefined || adherence === undefined || !patientAge) {
+        return res.status(400).json({ message: "Diagnosis, adherence, and patientAge are required" });
+      }
+
+      const insight = await AdvancedLLMService.predictOutcome(
+        diagnosis,
+        adherence,
+        riskFactors || [],
+        patientAge
+      );
+      return res.json(insight);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Advanced LLM - Get evidence-based guidelines
+  app.get("/api/llm/guidelines/:condition", async (req, res) => {
+    try {
+      const { condition } = req.params;
+      if (!condition) {
+        return res.status(400).json({ message: "Condition is required" });
+      }
+
+      const guidelines = AdvancedLLMService.getEvidenceBasedGuidelines(condition);
+      return res.json({ guidelines });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }
