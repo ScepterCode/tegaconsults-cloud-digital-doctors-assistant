@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Calendar, Clock, User, Plus } from "lucide-react";
+import { Calendar, Clock, User, Plus, Edit2, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -47,6 +47,7 @@ export default function PatientAppointments() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const form = useForm<AppointmentFormData>({
     resolver: zodResolver(appointmentSchema),
@@ -76,15 +77,51 @@ export default function PatientAppointments() {
     },
   });
 
-  // Create appointment mutation
-  const createAppointmentMutation = useMutation({
+  // Create/Update appointment mutation
+  const appointmentMutation = useMutation({
     mutationFn: async (data: AppointmentFormData) => {
-      const response = await apiRequest("POST", "/api/appointments", {
-        patientId: user?.id,
-        appointmentDate: new Date(data.appointmentDate),
-        reason: data.reason,
-        doctorId: data.doctorId,
+      if (editingId) {
+        const response = await apiRequest("PATCH", `/api/appointments/${editingId}`, {
+          appointmentDate: new Date(data.appointmentDate),
+          reason: data.reason,
+          doctorId: data.doctorId,
+        });
+        return response.json();
+      } else {
+        const response = await apiRequest("POST", "/api/appointments", {
+          patientId: user?.id,
+          appointmentDate: new Date(data.appointmentDate),
+          reason: data.reason,
+          doctorId: data.doctorId,
+        });
+        return response.json();
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["/api/appointments/patient", user?.id],
       });
+      toast({
+        title: "Success",
+        description: editingId ? "Appointment updated successfully!" : "Appointment booked successfully!",
+      });
+      form.reset();
+      setEditingId(null);
+      setOpen(false);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: editingId ? "Failed to update appointment" : "Failed to book appointment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Delete appointment mutation
+  const deleteAppointmentMutation = useMutation({
+    mutationFn: async (appointmentId: string) => {
+      const response = await apiRequest("DELETE", `/api/appointments/${appointmentId}`, {});
       return response.json();
     },
     onSuccess: () => {
@@ -93,19 +130,33 @@ export default function PatientAppointments() {
       });
       toast({
         title: "Success",
-        description: "Appointment booked successfully!",
+        description: "Appointment cancelled successfully!",
       });
-      form.reset();
-      setOpen(false);
     },
     onError: () => {
       toast({
         title: "Error",
-        description: "Failed to book appointment",
+        description: "Failed to cancel appointment",
         variant: "destructive",
       });
     },
   });
+
+  const handleEditClick = (appointment: any) => {
+    setEditingId(appointment.id);
+    form.reset({
+      doctorId: appointment.doctorId,
+      appointmentDate: new Date(appointment.appointmentDate).toISOString().slice(0, 16),
+      reason: appointment.reason,
+    });
+    setOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setEditingId(null);
+    form.reset();
+    setOpen(false);
+  };
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -129,21 +180,21 @@ export default function PatientAppointments() {
           <h1 className="text-3xl font-bold">My Appointments</h1>
           <p className="text-muted-foreground">View and book appointments with doctors</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleCloseDialog}>
           <DialogTrigger asChild>
-            <Button>
+            <Button data-testid="button-book-appointment-new">
               <Plus className="w-4 h-4 mr-2" />
               Book Appointment
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Book an Appointment</DialogTitle>
+              <DialogTitle>{editingId ? "Edit Appointment" : "Book an Appointment"}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit((data) =>
-                  createAppointmentMutation.mutate(data)
+                  appointmentMutation.mutate(data)
                 )}
                 className="space-y-4"
               >
@@ -211,10 +262,10 @@ export default function PatientAppointments() {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={createAppointmentMutation.isPending}
+                  disabled={appointmentMutation.isPending}
                   data-testid="button-book-appointment"
                 >
-                  {createAppointmentMutation.isPending ? "Booking..." : "Book Appointment"}
+                  {appointmentMutation.isPending ? editingId ? "Updating..." : "Booking..." : editingId ? "Update Appointment" : "Book Appointment"}
                 </Button>
               </form>
             </Form>
@@ -245,7 +296,9 @@ export default function PatientAppointments() {
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="w-4 h-4" />
-                    <span>{new Date(appointment.appointmentDate).toLocaleDateString()}</span>
+                    <span data-testid={`text-appointment-date-${appointment.id}`}>
+                      {new Date(appointment.appointmentDate).toLocaleDateString()}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Clock className="w-4 h-4" />
@@ -253,9 +306,30 @@ export default function PatientAppointments() {
                   </div>
                   <p className="text-sm text-muted-foreground">{appointment.reason}</p>
                 </div>
-                <Badge variant={getStatusBadgeVariant(appointment.status)}>
-                  {appointment.status}
-                </Badge>
+                <div className="flex flex-col gap-2 items-end">
+                  <Badge variant={getStatusBadgeVariant(appointment.status)}>
+                    {appointment.status}
+                  </Badge>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEditClick(appointment)}
+                      data-testid={`button-edit-appointment-${appointment.id}`}
+                    >
+                      <Edit2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => deleteAppointmentMutation.mutate(appointment.id)}
+                      disabled={deleteAppointmentMutation.isPending}
+                      data-testid={`button-delete-appointment-${appointment.id}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </Card>
           ))}
