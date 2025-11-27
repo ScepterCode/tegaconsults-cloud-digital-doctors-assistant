@@ -21,6 +21,7 @@ import Users from "@/pages/users";
 import PatientAppointments from "@/pages/patient-appointments";
 import DoctorAppointments from "@/pages/doctor-appointments";
 import Billing from "@/pages/billing";
+import DepartmentDashboard from "@/pages/department-dashboard";
 import NotFound from "@/pages/not-found";
 
 function AppRoutes() {
@@ -100,6 +101,11 @@ function AppRoutes() {
                 <Route path="/billing">
                   <ProtectedRoute>
                     <Billing />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/department/dashboard">
+                  <ProtectedRoute requiredRoles={["doctor", "nurse"]}>
+                    <DepartmentDashboard />
                   </ProtectedRoute>
                 </Route>
                 <Route path="/">

@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { loginSchema, registerSchema, insertPatientSchema, insertAppointmentSchema, type User } from "@shared/schema";
+import { loginSchema, registerSchema, insertPatientSchema, insertAppointmentSchema, insertNotificationSchema, type User } from "@shared/schema";
 import { MLHealthService } from "./ml-service";
 import { OpenAIService } from "./openai-service";
 import { z } from "zod";
@@ -556,6 +556,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       return res.json({ message: "Subscription cancelled", subscription });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Department Notifications Routes
+  app.get("/api/departments/:departmentId/notifications", async (req, res) => {
+    try {
+      const { departmentId } = req.params;
+      const notifications = await storage.getDepartmentNotifications(departmentId);
+      return res.json(notifications);
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.post("/api/departments/:departmentId/notifications", async (req, res) => {
+    try {
+      const { departmentId } = req.params;
+      const notificationData = insertNotificationSchema.parse({
+        ...req.body,
+        departmentId,
+      });
+
+      const notification = await storage.createNotification(notificationData);
+      return res.status(201).json(notification);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  app.patch("/api/notifications/:notificationId", async (req, res) => {
+    try {
+      const { notificationId } = req.params;
+      const notification = await storage.updateNotification(notificationId, req.body);
+
+      if (!notification) {
+        return res.status(404).json({ message: "Notification not found" });
+      }
+
+      return res.json(notification);
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }

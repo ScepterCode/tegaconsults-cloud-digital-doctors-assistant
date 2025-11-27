@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult, type Appointment, type InsertAppointment, type Subscription, type InsertSubscription } from "@shared/schema";
+import { type User, type InsertUser, type Patient, type InsertPatient, type LabResult, type InsertLabResult, type Appointment, type InsertAppointment, type Subscription, type InsertSubscription, type Department, type InsertDepartment, type Notification, type InsertNotification } from "@shared/schema";
 import { randomUUID } from "crypto";
 
 export interface IStorage {
@@ -44,6 +44,18 @@ export interface IStorage {
   createSubscription(subscription: InsertSubscription): Promise<Subscription>;
   getSubscriptionByAdminId(adminUserId: string): Promise<Subscription | undefined>;
   updateSubscription(adminUserId: string, updates: Partial<Subscription>): Promise<Subscription | undefined>;
+
+  // Department operations
+  createDepartment(department: InsertDepartment): Promise<Department>;
+  getDepartment(id: string): Promise<Department | undefined>;
+  getDepartmentsByHospital(hospitalAdminId: string): Promise<Department[]>;
+  updateDepartment(id: string, updates: Partial<Department>): Promise<Department | undefined>;
+
+  // Notification operations
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotification(id: string): Promise<Notification | undefined>;
+  getDepartmentNotifications(departmentId: string): Promise<Notification[]>;
+  updateNotification(id: string, updates: Partial<Notification>): Promise<Notification | undefined>;
 }
 
 interface PasswordResetToken {
@@ -59,6 +71,8 @@ export class MemStorage implements IStorage {
   private appointments: Map<string, Appointment>;
   private passwordResetTokens: Map<string, PasswordResetToken>;
   private subscriptions: Map<string, Subscription>;
+  private departments: Map<string, Department>;
+  private notifications: Map<string, Notification>;
 
   constructor() {
     this.users = new Map();
@@ -67,8 +81,11 @@ export class MemStorage implements IStorage {
     this.appointments = new Map();
     this.passwordResetTokens = new Map();
     this.subscriptions = new Map();
+    this.departments = new Map();
+    this.notifications = new Map();
     this.seedDefaultUsers();
     this.seedDefaultPatients();
+    this.seedDefaultDepartments();
   }
 
   private seedDefaultUsers() {
@@ -113,6 +130,44 @@ export class MemStorage implements IStorage {
         isActive: user.isActive ?? 1,
       };
       this.users.set(id, newUser);
+    });
+  }
+
+  private seedDefaultDepartments() {
+    // Get the first admin user
+    const adminUser = Array.from(this.users.values()).find(u => u.role === "admin");
+    if (!adminUser) return;
+
+    const departments: InsertDepartment[] = [
+      {
+        hospitalAdminId: adminUser.id,
+        name: "Cardiology",
+        description: "Heart and cardiovascular diseases",
+        status: "active",
+      },
+      {
+        hospitalAdminId: adminUser.id,
+        name: "Emergency",
+        description: "Emergency and trauma care",
+        status: "active",
+      },
+      {
+        hospitalAdminId: adminUser.id,
+        name: "Pediatrics",
+        description: "Children's health services",
+        status: "active",
+      },
+    ];
+
+    departments.forEach(dept => {
+      const id = randomUUID();
+      const newDept: Department = {
+        ...dept,
+        id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      this.departments.set(id, newDept);
     });
   }
 
@@ -527,6 +582,66 @@ export class MemStorage implements IStorage {
     };
     this.subscriptions.set(insertSubscription.adminUserId, subscription);
     return subscription;
+  }
+
+  async createDepartment(department: InsertDepartment): Promise<Department> {
+    const id = randomUUID();
+    const newDepartment: Department = {
+      ...department,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.departments.set(id, newDepartment);
+    return newDepartment;
+  }
+
+  async getDepartment(id: string): Promise<Department | undefined> {
+    return this.departments.get(id);
+  }
+
+  async getDepartmentsByHospital(hospitalAdminId: string): Promise<Department[]> {
+    return Array.from(this.departments.values()).filter(
+      (d) => d.hospitalAdminId === hospitalAdminId
+    );
+  }
+
+  async updateDepartment(id: string, updates: Partial<Department>): Promise<Department | undefined> {
+    const department = this.departments.get(id);
+    if (!department) return undefined;
+    const updated = { ...department, ...updates, updatedAt: new Date() };
+    this.departments.set(id, updated);
+    return updated;
+  }
+
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const id = randomUUID();
+    const newNotification: Notification = {
+      ...notification,
+      id,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    this.notifications.set(id, newNotification);
+    return newNotification;
+  }
+
+  async getNotification(id: string): Promise<Notification | undefined> {
+    return this.notifications.get(id);
+  }
+
+  async getDepartmentNotifications(departmentId: string): Promise<Notification[]> {
+    return Array.from(this.notifications.values())
+      .filter((n) => n.departmentId === departmentId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  async updateNotification(id: string, updates: Partial<Notification>): Promise<Notification | undefined> {
+    const notification = this.notifications.get(id);
+    if (!notification) return undefined;
+    const updated = { ...notification, ...updates, updatedAt: new Date() };
+    this.notifications.set(id, updated);
+    return updated;
   }
 
   async getSubscriptionByAdminId(adminUserId: string): Promise<Subscription | undefined> {

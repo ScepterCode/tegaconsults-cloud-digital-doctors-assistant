@@ -6,7 +6,9 @@ import {
   LogOut,
   UserCog,
   Calendar,
-  CreditCard
+  CreditCard,
+  Building2,
+  Bell
 } from "lucide-react";
 import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Link, useLocation } from "wouter";
@@ -74,6 +76,12 @@ export function AppSidebar() {
       url: "/billing",
       icon: CreditCard,
       roles: ["admin", "doctor", "nurse", "patient"],
+    },
+    {
+      title: "Department Dashboard",
+      url: "/department/dashboard",
+      icon: Building2,
+      roles: ["doctor", "nurse"],
     },
   ];
 

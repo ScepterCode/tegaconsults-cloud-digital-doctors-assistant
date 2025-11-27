@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   role: text("role").notNull(), // 'admin', 'doctor', 'nurse', 'patient'
   fullName: text("full_name").notNull(),
   hospitalAdminId: varchar("hospital_admin_id"), // For staff linked to hospital admin (only for doctors/nurses)
+  departmentId: varchar("department_id"), // Department assignment for doctors/nurses
   isActive: integer("is_active").notNull().default(1), // 1 = active, 0 = inactive
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -267,3 +268,50 @@ export const insertSubscriptionSchema = createInsertSchema(subscriptions).omit({
 
 export type InsertSubscription = z.infer<typeof insertSubscriptionSchema>;
 export type Subscription = typeof subscriptions.$inferSelect;
+
+// Departments table for hospital departments
+export const departments = pgTable("departments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  hospitalAdminId: varchar("hospital_admin_id").notNull(), // Admin who owns this hospital
+  name: text("name").notNull(), // e.g., "Cardiology", "Pediatrics", "Emergency"
+  description: text("description"),
+  headStaffId: varchar("head_staff_id"), // Department head user ID
+  status: text("status").notNull().default("active"), // "active", "inactive"
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertDepartmentSchema = createInsertSchema(departments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertDepartment = z.infer<typeof insertDepartmentSchema>;
+export type Department = typeof departments.$inferSelect;
+
+// Notifications table for department service requests and alerts
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  departmentId: varchar("department_id").notNull(), // Department receiving notification
+  patientId: varchar("patient_id").notNull(), // Patient related to service request
+  appointmentId: varchar("appointment_id"), // Optional appointment reference
+  type: text("type").notNull(), // "consultation_request", "emergency_alert", "lab_result", "follow_up", "status_update"
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  priority: text("priority").notNull().default("normal"), // "low", "normal", "high", "critical"
+  requestedBy: varchar("requested_by").notNull(), // User ID who requested service
+  status: text("status").notNull().default("unread"), // "unread", "read", "acknowledged", "completed"
+  actionData: text("action_data"), // JSON data for actions
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
