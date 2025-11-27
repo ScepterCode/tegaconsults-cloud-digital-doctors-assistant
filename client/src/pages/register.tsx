@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
 import { z } from "zod";
 
 const registerSchema = z.object({
@@ -35,6 +35,7 @@ const registerSchema = z.object({
   role: z.enum(["patient", "doctor", "nurse", "admin"], {
     errorMap: () => ({ message: "Please select a role" }),
   }),
+  departmentId: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -45,6 +46,15 @@ type RegisterData = z.infer<typeof registerSchema>;
 export default function Register() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [selectedRole, setSelectedRole] = useState("patient");
+
+  const { data: departments = [] } = useQuery({
+    queryKey: ["/api/departments"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/departments");
+      return response.json();
+    },
+  });
 
   const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
@@ -54,6 +64,7 @@ export default function Register() {
       confirmPassword: "",
       fullName: "",
       role: "patient",
+      departmentId: "",
     },
   });
 
@@ -64,6 +75,7 @@ export default function Register() {
         password: data.password,
         fullName: data.fullName,
         role: data.role,
+        departmentId: data.departmentId || null,
       });
       return await res.json();
     },
@@ -135,7 +147,13 @@ export default function Register() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                        setSelectedRole(value);
+                      }}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger data-testid="select-role">
                           <SelectValue />
@@ -152,6 +170,33 @@ export default function Register() {
                   </FormItem>
                 )}
               />
+
+              {(selectedRole === "doctor" || selectedRole === "nurse") && (
+                <FormField
+                  control={form.control}
+                  name="departmentId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-department">
+                            <SelectValue placeholder="Select a department" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {departments.map((dept: any) => (
+                            <SelectItem key={dept.id} value={dept.id}>
+                              {dept.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}

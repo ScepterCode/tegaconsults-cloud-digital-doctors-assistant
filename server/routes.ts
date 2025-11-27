@@ -21,12 +21,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Username already exists" });
       }
 
-      // Create new user
+      // Create new user with optional department assignment
       const newUser = await storage.createUser({
         username: registerData.username,
         password: registerData.password,
         fullName: registerData.fullName,
         role: registerData.role,
+        departmentId: registerData.departmentId || null,
         isActive: 1,
       });
 
@@ -559,6 +560,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       return res.json({ message: "Subscription cancelled", subscription });
+    } catch (error) {
+      return res.status(500).json({ message: "Internal server error" });
+    }
+  });
+
+  // Get all departments (for registration and navigation)
+  app.get("/api/departments", async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const departments = await Promise.all(
+        [...new Set(users
+          .filter(u => u.departmentId)
+          .map(u => u.departmentId))] as string[]
+      ).then(async (deptIds) => {
+        return Promise.all(deptIds.map(id => storage.getDepartment(id)));
+      });
+      return res.json(departments.filter(Boolean));
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }

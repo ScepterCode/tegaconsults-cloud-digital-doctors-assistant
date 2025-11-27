@@ -8,7 +8,7 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  role: text("role").notNull(), // 'admin', 'doctor', 'nurse', 'patient'
+  role: text("role").notNull(), // 'admin', 'doctor', 'nurse', 'patient' | 'cardiology', 'pediatrics', 'orthopedics', etc.
   fullName: text("full_name").notNull(),
   hospitalAdminId: varchar("hospital_admin_id"), // For staff linked to hospital admin (only for doctors/nurses)
   departmentId: varchar("department_id"), // Department assignment for doctors/nurses
@@ -100,9 +100,10 @@ export const registerSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   fullName: z.string().min(2, "Full name is required"),
-  role: z.enum(["doctor", "nurse", "admin"], {
+  role: z.enum(["patient", "doctor", "nurse", "admin"], {
     errorMap: () => ({ message: "Please select a valid role" }),
   }),
+  departmentId: z.string().optional(), // For doctors and nurses
 });
 
 export type RegisterCredentials = z.infer<typeof registerSchema>;
