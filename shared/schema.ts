@@ -3,26 +3,6 @@ import { pgTable, text, varchar, integer, timestamp } from "drizzle-orm/pg-core"
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Organizations table for hospitals/clinics
-export const organizations = pgTable("organizations", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
-  phoneNumber: text("phone_number"),
-  address: text("address"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
-
-export const insertOrganizationSchema = createInsertSchema(organizations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertOrganization = z.infer<typeof insertOrganizationSchema>;
-export type Organization = typeof organizations.$inferSelect;
-
 // Users table with role-based access control
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -30,7 +10,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   role: text("role").notNull(), // 'admin', 'doctor', 'nurse', 'patient'
   fullName: text("full_name").notNull(),
-  organizationId: varchar("organization_id"), // For staff linked to hospital
+  hospitalAdminId: varchar("hospital_admin_id"), // For staff linked to hospital admin (only for doctors/nurses)
   isActive: integer("is_active").notNull().default(1), // 1 = active, 0 = inactive
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -260,10 +240,10 @@ export const insertAppointmentSchema = createInsertSchema(appointments).omit({
 export type InsertAppointment = z.infer<typeof insertAppointmentSchema>;
 export type Appointment = typeof appointments.$inferSelect;
 
-// Subscriptions table for managing organization subscriptions
+// Subscriptions table for managing hospital admin subscriptions
 export const subscriptions = pgTable("subscriptions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  organizationId: varchar("organization_id").notNull().unique(),
+  adminUserId: varchar("admin_user_id").notNull().unique(), // Hospital admin user ID
   tier: text("tier").notNull().default("free"), // "free", "hospital"
   trialStartDate: timestamp("trial_start_date").defaultNow(),
   trialEndDate: timestamp("trial_end_date"),
@@ -271,7 +251,6 @@ export const subscriptions = pgTable("subscriptions", {
   subscriptionEndDate: timestamp("subscription_end_date"),
   billingCycle: text("billing_cycle"), // "monthly", "yearly"
   status: text("status").notNull().default("trial"), // "trial", "active", "cancelled", "expired"
-  staffCount: integer("staff_count").default(0), // Number of doctors/nurses covered
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   createdAt: timestamp("created_at").defaultNow(),

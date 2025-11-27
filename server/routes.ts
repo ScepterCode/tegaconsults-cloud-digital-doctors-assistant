@@ -490,16 +490,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Subscription routes
-  app.get("/api/subscription/:userId", async (req, res) => {
+  // Subscription routes (Hospital Admin only)
+  app.get("/api/subscription/:adminUserId", async (req, res) => {
     try {
-      const { userId } = req.params;
-      let subscription = await storage.getSubscription(userId);
+      const { adminUserId } = req.params;
+      let subscription = await storage.getSubscriptionByAdminId(adminUserId);
       
       if (!subscription) {
-        // Create subscription on first access (new user gets trial)
+        // Create subscription on first access (new admin gets trial)
         subscription = await storage.createSubscription({
-          userId,
+          adminUserId,
           tier: "free",
           status: "trial",
         });
@@ -511,13 +511,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/subscription/:userId/upgrade", async (req, res) => {
+  app.post("/api/subscription/:adminUserId/upgrade", async (req, res) => {
     try {
-      const { userId } = req.params;
+      const { adminUserId } = req.params;
       const { billingCycle } = req.body; // "monthly" or "yearly"
 
-      const subscription = await storage.updateSubscription(userId, {
-        tier: "pro",
+      const subscription = await storage.updateSubscription(adminUserId, {
+        tier: "hospital",
         status: "active",
         billingCycle,
         subscriptionStartDate: new Date(),
@@ -528,17 +528,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Subscription not found" });
       }
 
-      return res.json({ message: "Upgraded to pro", subscription });
+      return res.json({ message: "Upgraded to hospital plan", subscription });
     } catch (error) {
       return res.status(500).json({ message: "Internal server error" });
     }
   });
 
-  app.post("/api/subscription/:userId/cancel", async (req, res) => {
+  app.post("/api/subscription/:adminUserId/cancel", async (req, res) => {
     try {
-      const { userId } = req.params;
+      const { adminUserId } = req.params;
 
-      const subscription = await storage.updateSubscription(userId, {
+      const subscription = await storage.updateSubscription(adminUserId, {
         status: "cancelled",
       });
 

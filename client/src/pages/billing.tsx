@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check } from "lucide-react";
+import { Check, AlertCircle } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -11,15 +11,17 @@ import type { Subscription } from "@shared/schema";
 export default function Billing() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const isAdmin = user?.role === "admin";
+  const adminUserId = isAdmin ? user?.id : user?.hospitalAdminId;
 
   const { data: subscription, isLoading } = useQuery<Subscription>({
-    queryKey: ["/api/subscription", user?.id],
-    enabled: !!user?.id,
+    queryKey: ["/api/subscription", adminUserId],
+    enabled: !!adminUserId,
   });
 
   const upgradeMutation = useMutation({
     mutationFn: async (billingCycle: "monthly" | "yearly") => {
-      const res = await apiRequest("POST", `/api/subscription/${user?.id}/upgrade`, {
+      const res = await apiRequest("POST", `/api/subscription/${adminUserId}/upgrade`, {
         billingCycle,
       });
       return await res.json();
@@ -27,7 +29,7 @@ export default function Billing() {
     onSuccess: () => {
       toast({
         title: "Success",
-        description: "You've upgraded to Pro! Enjoy all premium features.",
+        description: "You've upgraded to Hospital plan! Your entire team gets access.",
       });
       window.location.reload();
     },
@@ -42,13 +44,13 @@ export default function Billing() {
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", `/api/subscription/${user?.id}/cancel`, {});
+      const res = await apiRequest("POST", `/api/subscription/${adminUserId}/cancel`, {});
       return await res.json();
     },
     onSuccess: () => {
       toast({
         title: "Subscription Cancelled",
-        description: "Your Pro subscription has been cancelled.",
+        description: "Your Hospital subscription has been cancelled.",
       });
       window.location.reload();
     },
@@ -62,7 +64,36 @@ export default function Billing() {
   });
 
   const isTrialActive = subscription?.status === "trial";
-  const isProActive = subscription?.status === "active" && subscription?.tier === "pro";
+  const isHospitalActive = subscription?.status === "active" && subscription?.tier === "hospital";
+
+  if (!isAdmin) {
+    return (
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Billing & Subscription</h1>
+          <p className="text-gray-600 mt-2">Appointment Booking</p>
+        </div>
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h3 className="font-semibold text-blue-900">Appointment Fee</h3>
+                <p className="text-blue-800 mt-1">
+                  Each appointment booking costs <span className="font-bold">₦1,000</span>
+                </p>
+              </div>
+            </div>
+            <div className="pt-4 border-t border-blue-200">
+              <p className="text-sm text-blue-800">
+                Your hospital admin manages the hospital subscription. You have access to all features through your hospital's plan.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const getDaysLeft = () => {
     if (!subscription?.trialEndDate) return 0;
@@ -99,10 +130,10 @@ export default function Billing() {
                 <div>
                   <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold">
-                      {isProActive ? "Professional Plan" : "Free Trial"}
+                      {isHospitalActive ? "Hospital Plan" : "Free Trial"}
                     </h3>
-                    <Badge variant={isProActive ? "default" : "secondary"}>
-                      {isProActive ? "Active" : "Trial"}
+                    <Badge variant={isHospitalActive ? "default" : "secondary"}>
+                      {isHospitalActive ? "Active" : "Trial"}
                     </Badge>
                   </div>
                   {isTrialActive && (
@@ -110,15 +141,15 @@ export default function Billing() {
                       {daysLeft} days remaining in your free trial
                     </p>
                   )}
-                  {isProActive && subscription?.billingCycle && (
+                  {isHospitalActive && subscription?.billingCycle && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      {subscription.billingCycle === "monthly" ? "₦15,000 per month" : "₦100,000 per year"}
+                      {subscription.billingCycle === "monthly" ? "₦15,000 per month" : "₦100,000 per year"} - All staff get access
                     </p>
                   )}
                 </div>
               </div>
 
-              {isProActive && (
+              {isHospitalActive && (
                 <Button
                   variant="destructive"
                   onClick={() => cancelMutation.mutate()}
@@ -133,7 +164,7 @@ export default function Billing() {
 
           {/* Pricing Plans */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">Upgrade to Pro</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Hospital Subscription Plans</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Monthly Plan */}
               <Card className="relative">
@@ -149,12 +180,12 @@ export default function Billing() {
 
                   <ul className="space-y-3">
                     {[
+                      "All staff get full access",
                       "All AI features",
                       "Advanced diagnostics",
                       "Lab analysis",
                       "Appointment management",
                       "Email support",
-                      "Patient records",
                     ].map((feature) => (
                       <li key={feature} className="flex items-center gap-2">
                         <Check className="h-4 w-4 text-green-600" />
@@ -166,10 +197,10 @@ export default function Billing() {
                   <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={() => upgradeMutation.mutate("monthly")}
-                    disabled={upgradeMutation.isPending || isProActive}
+                    disabled={upgradeMutation.isPending || isHospitalActive}
                     data-testid="button-upgrade-monthly"
                   >
-                    {isProActive ? "Current Plan" : upgradeMutation.isPending ? "Processing..." : "Upgrade Now"}
+                    {isHospitalActive ? "Current Plan" : upgradeMutation.isPending ? "Processing..." : "Upgrade Now"}
                   </Button>
                 </CardContent>
               </Card>
@@ -191,12 +222,12 @@ export default function Billing() {
 
                   <ul className="space-y-3">
                     {[
+                      "All staff get full access",
                       "All AI features",
                       "Advanced diagnostics",
                       "Lab analysis",
                       "Appointment management",
                       "Priority support",
-                      "Patient records",
                     ].map((feature) => (
                       <li key={feature} className="flex items-center gap-2">
                         <Check className="h-4 w-4 text-green-600" />
@@ -208,10 +239,10 @@ export default function Billing() {
                   <Button
                     className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={() => upgradeMutation.mutate("yearly")}
-                    disabled={upgradeMutation.isPending || isProActive}
+                    disabled={upgradeMutation.isPending || isHospitalActive}
                     data-testid="button-upgrade-yearly"
                   >
-                    {isProActive ? "Current Plan" : upgradeMutation.isPending ? "Processing..." : "Upgrade Now"}
+                    {isHospitalActive ? "Current Plan" : upgradeMutation.isPending ? "Processing..." : "Upgrade Now"}
                   </Button>
                 </CardContent>
               </Card>
