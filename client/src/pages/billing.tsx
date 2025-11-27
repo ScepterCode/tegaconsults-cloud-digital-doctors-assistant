@@ -1,18 +1,30 @@
+import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, AlertCircle } from "lucide-react";
+import { Check, AlertCircle, Copy, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Subscription } from "@shared/schema";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export default function Billing() {
   const { user } = useAuth();
   const { toast } = useToast();
   const isAdmin = user?.role === "admin";
   const adminUserId = isAdmin ? user?.id : user?.hospitalAdminId;
+  const [paymentDialog, setPaymentDialog] = useState(false);
+  const [selectedBilling, setSelectedBilling] = useState<"monthly" | "yearly" | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"bank" | "paystack" | null>(null);
+  const [copiedBank, setCopiedBank] = useState(false);
 
   const { data: subscription, isLoading } = useQuery<Subscription>({
     queryKey: ["/api/subscription", adminUserId],
@@ -20,9 +32,10 @@ export default function Billing() {
   });
 
   const upgradeMutation = useMutation({
-    mutationFn: async (billingCycle: "monthly" | "yearly") => {
+    mutationFn: async (data: { billingCycle: "monthly" | "yearly"; paymentMethod: "bank" | "paystack" }) => {
       const res = await apiRequest("POST", `/api/subscription/${adminUserId}/upgrade`, {
-        billingCycle,
+        billingCycle: data.billingCycle,
+        paymentMethod: data.paymentMethod,
       });
       return await res.json();
     },
@@ -41,6 +54,25 @@ export default function Billing() {
       });
     },
   });
+
+  const handleCopyBank = () => {
+    navigator.clipboard.writeText("1228732577");
+    setCopiedBank(true);
+    setTimeout(() => setCopiedBank(false), 2000);
+  };
+
+  const handlePaystackPayment = () => {
+    if (selectedBilling === "monthly") {
+      window.location.href = `https://paystack.com/pay/hospital-plan-monthly?reference=${adminUserId}`;
+    } else {
+      window.location.href = `https://paystack.com/pay/hospital-plan-yearly?reference=${adminUserId}`;
+    }
+  };
+
+  const handleBankPayment = () => {
+    upgradeMutation.mutate({ billingCycle: selectedBilling!, paymentMethod: "bank" });
+    setPaymentDialog(false);
+  };
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
