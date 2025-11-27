@@ -50,6 +50,7 @@ export interface IStorage {
   // Department operations
   createDepartment(department: InsertDepartment): Promise<Department>;
   getDepartment(id: string): Promise<Department | undefined>;
+  getAllDepartments(): Promise<Department[]>;
   getDepartmentsByHospital(hospitalAdminId: string): Promise<Department[]>;
   updateDepartment(id: string, updates: Partial<Department>): Promise<Department | undefined>;
 
@@ -415,6 +416,10 @@ export class ProductionStorage implements IStorage {
   async getDepartment(id: string): Promise<Department | undefined> {
     const result = await db.select().from(departments).where(eq(departments.id, id));
     return result[0];
+  }
+
+  async getAllDepartments(): Promise<Department[]> {
+    return await db.select().from(departments);
   }
 
   async getDepartmentsByHospital(hospitalAdminId: string): Promise<Department[]> {

@@ -21,6 +21,46 @@ function getOpenAIClient(): OpenAI | null {
   return openaiInstance;
 }
 
+// Response cache for common queries (expires after 5 minutes)
+const responseCache = new Map<string, { response: ChatResponse; timestamp: number }>();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCachedResponse(key: string): ChatResponse | null {
+  const cached = responseCache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+    return cached.response;
+  }
+  if (cached) {
+    responseCache.delete(key);
+  }
+  return null;
+}
+
+function setCachedResponse(key: string, response: ChatResponse): void {
+  responseCache.set(key, { response, timestamp: Date.now() });
+  // Limit cache size
+  if (responseCache.size > 100) {
+    const oldestKey = responseCache.keys().next().value;
+    if (oldestKey) responseCache.delete(oldestKey);
+  }
+}
+
+// Quick response patterns for EXACT greeting matches only
+const QUICK_RESPONSES: Record<string, ChatResponse> = {
+  "hello": { response: "Hello! I'm Dr. Tega, your AI healthcare assistant. How can I help you today?", confidence: 1.0 },
+  "hi": { response: "Hi there! I'm Dr. Tega. What health questions can I assist you with?", confidence: 1.0 },
+  "hey": { response: "Hey! I'm Dr. Tega, ready to assist with your health questions.", confidence: 1.0 },
+  "help": { response: "I'm Dr. Tega, here to help with:\n- Symptom analysis and health assessments\n- Medication information and guidelines\n- Lab result interpretation\n- Clinical recommendations\n- Health risk evaluations\n\nWhat would you like to know?", confidence: 1.0 },
+  "thank you": { response: "You're welcome! If you have any more health questions, feel free to ask. Take care!", confidence: 1.0 },
+  "thanks": { response: "You're welcome! Stay healthy and don't hesitate to ask if you need more assistance.", confidence: 1.0 },
+  "bye": { response: "Goodbye! Remember to take care of your health. I'm always here if you need medical guidance.", confidence: 1.0 },
+  "goodbye": { response: "Goodbye! Take care of your health. I'm here whenever you need assistance.", confidence: 1.0 },
+};
+
+function normalizeQuery(query: string): string {
+  return query.toLowerCase().trim().replace(/[^\w\s]/g, '').replace(/\s+/g, ' ');
+}
+
 export class OpenAIService {
   /**
    * Get AI-powered diagnosis assistance using GPT-5
@@ -81,21 +121,32 @@ Please provide diagnostic suggestions with confidence scores and recommended act
 
   /**
    * Get medical information response from Dr. Tega
+   * Optimized for speed with caching and quick responses
    */
   static async getMedicalResponse(question: string): Promise<ChatResponse> {
+    const normalizedQuestion = normalizeQuery(question);
+    
+    // Check for EXACT quick responses first (instant) - only for simple greetings
+    const quickResponse = QUICK_RESPONSES[normalizedQuestion];
+    if (quickResponse && normalizedQuestion.split(' ').length <= 3) {
+      return quickResponse;
+    }
+
+    // Check cache for similar queries
+    const cacheKey = normalizedQuestion.slice(0, 100);
+    const cached = getCachedResponse(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
     try {
       const openai = getOpenAIClient();
       if (!openai) {
         return SimulatedChatbotService.getMedicalResponse(question);
       }
-      const systemPrompt = `You are Dr. Tega, a knowledgeable AI healthcare assistant. You provide accurate, evidence-based medical information while being careful not to replace professional medical advice. 
-
-Key responsibilities:
-1. Answer healthcare questions accurately
-2. Provide evidence-based information
-3. Always recommend consulting with healthcare professionals for diagnosis/treatment
-4. Maintain HIPAA-like confidentiality standards
-5. Flag potential emergencies`;
+      
+      // Optimized concise prompt for faster responses
+      const systemPrompt = `You are Dr. Tega, a knowledgeable AI healthcare assistant. Provide accurate, concise, evidence-based medical information. Keep responses focused and actionable. Always recommend consulting healthcare professionals for diagnosis/treatment. Flag emergencies clearly.`;
 
       const response = await openai.chat.completions.create({
         model: "gpt-5",
@@ -103,14 +154,20 @@ Key responsibilities:
           { role: "system", content: systemPrompt },
           { role: "user", content: question },
         ],
-        max_completion_tokens: 1024,
+        max_completion_tokens: 800, // Reduced for faster responses
+        temperature: 0.7,
       });
 
       const content = response.choices[0].message.content || "";
-      return {
+      const result: ChatResponse = {
         response: content,
         confidence: 0.9,
       };
+      
+      // Cache the response
+      setCachedResponse(cacheKey, result);
+      
+      return result;
     } catch (error: any) {
       console.error("OpenAI API Error:", error);
       

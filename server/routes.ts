@@ -7,6 +7,7 @@ import { OpenAIService } from "./openai-service";
 import { NLPService } from "./nlp-service";
 import { AdvancedLLMService } from "./advanced-llm-service";
 import { mlTrainingService } from "./ml-training-service";
+import { departmentAutomation } from "./department-automation-service";
 import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -917,6 +918,208 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json(importance);
     } catch (error: any) {
       return res.status(500).json({ message: error.message || "Feature importance calculation failed" });
+    }
+  });
+
+  // =============================================
+  // Department Automation Routes
+  // =============================================
+
+  // Auto-notify departments based on patient condition
+  app.post("/api/automation/notify-departments", async (req, res) => {
+    try {
+      const { patientId, requestedBy } = req.body;
+
+      if (!patientId || !requestedBy) {
+        return res.status(400).json({ message: "patientId and requestedBy are required" });
+      }
+
+      const patient = await storage.getPatient(patientId);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      const notifications = await departmentAutomation.autoNotifyDepartments(patient, requestedBy);
+      return res.json({
+        message: `Notified ${notifications.length} department(s)`,
+        notifications,
+        departments: notifications.map(n => n.departmentId),
+      });
+    } catch (error) {
+      console.error("Automation error:", error);
+      return res.status(500).json({ message: "Failed to notify departments" });
+    }
+  });
+
+  // Analyze which departments a patient needs
+  app.get("/api/automation/analyze-patient/:patientId", async (req, res) => {
+    try {
+      const { patientId } = req.params;
+      const patient = await storage.getPatient(patientId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      const matchedDepartments = await departmentAutomation.analyzePatientForDepartments(patient);
+      return res.json({
+        patient: {
+          id: patient.id,
+          name: `${patient.firstName} ${patient.lastName}`,
+          mrn: patient.mrn,
+        },
+        recommendedDepartments: matchedDepartments.map(d => ({
+          department: d.departmentName,
+          priority: d.priority,
+          matchedSymptoms: d.symptoms.filter(s => 
+            (patient.symptoms || "").toLowerCase().includes(s.toLowerCase())
+          ),
+        })),
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Analysis failed" });
+    }
+  });
+
+  // Get patients relevant to a department
+  app.get("/api/automation/department-patients/:departmentId", async (req, res) => {
+    try {
+      const { departmentId } = req.params;
+      const patients = await departmentAutomation.getDepartmentPatientRecords(departmentId);
+      return res.json({ 
+        departmentId,
+        patientCount: patients.length,
+        patients: patients.map(p => ({
+          id: p.id,
+          name: `${p.firstName} ${p.lastName}`,
+          mrn: p.mrn,
+          age: p.age,
+          gender: p.gender,
+          symptoms: p.symptoms,
+          vitals: {
+            bp: p.bloodPressureSystolic && p.bloodPressureDiastolic 
+              ? `${p.bloodPressureSystolic}/${p.bloodPressureDiastolic}` 
+              : null,
+            hr: p.heartRate,
+            temp: p.temperature,
+          },
+        })),
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to get department patients" });
+    }
+  });
+
+  // Notify on vital sign changes
+  app.post("/api/automation/vital-change-alert", async (req, res) => {
+    try {
+      const { patientId, previousVitals, requestedBy } = req.body;
+
+      if (!patientId || !requestedBy) {
+        return res.status(400).json({ message: "patientId and requestedBy are required" });
+      }
+
+      const patient = await storage.getPatient(patientId);
+      if (!patient) {
+        return res.status(404).json({ message: "Patient not found" });
+      }
+
+      const notifications = await departmentAutomation.notifyOnVitalChange(
+        patient,
+        previousVitals || {},
+        requestedBy
+      );
+
+      return res.json({
+        message: notifications.length > 0 
+          ? `Alert sent to ${notifications.length} department(s)` 
+          : "No significant vital changes detected",
+        notifications,
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to process vital change alert" });
+    }
+  });
+
+  // Notify on lab result
+  app.post("/api/automation/lab-result-alert", async (req, res) => {
+    try {
+      const { patientId, labResultStatus, testName, requestedBy } = req.body;
+
+      if (!patientId || !labResultStatus || !testName || !requestedBy) {
+        return res.status(400).json({ 
+          message: "patientId, labResultStatus, testName, and requestedBy are required" 
+        });
+      }
+
+      const notifications = await departmentAutomation.notifyOnLabResult(
+        patientId,
+        labResultStatus,
+        testName,
+        requestedBy
+      );
+
+      return res.json({
+        message: notifications.length > 0 
+          ? `Notified ${notifications.length} department(s) about ${labResultStatus} lab result` 
+          : "No notifications sent",
+        notifications,
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to process lab result alert" });
+    }
+  });
+
+  // Get department notifications with filters
+  app.get("/api/automation/department-notifications/:departmentId", async (req, res) => {
+    try {
+      const { departmentId } = req.params;
+      const { status, priority } = req.query;
+
+      let notifications = await storage.getDepartmentNotifications(departmentId);
+
+      if (status) {
+        notifications = notifications.filter(n => n.status === status);
+      }
+      if (priority) {
+        notifications = notifications.filter(n => n.priority === priority);
+      }
+
+      return res.json({
+        departmentId,
+        total: notifications.length,
+        unread: notifications.filter(n => n.status === "unread").length,
+        notifications,
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to get notifications" });
+    }
+  });
+
+  // Batch process all patients and notify relevant departments
+  app.post("/api/automation/batch-notify", async (req, res) => {
+    try {
+      const { requestedBy } = req.body;
+
+      if (!requestedBy) {
+        return res.status(400).json({ message: "requestedBy is required" });
+      }
+
+      const patients = await storage.getAllPatients();
+      const allNotifications = [];
+
+      for (const patient of patients) {
+        const notifications = await departmentAutomation.autoNotifyDepartments(patient, requestedBy);
+        allNotifications.push(...notifications);
+      }
+
+      return res.json({
+        message: `Processed ${patients.length} patients, sent ${allNotifications.length} notifications`,
+        patientsProcessed: patients.length,
+        notificationsSent: allNotifications.length,
+      });
+    } catch (error) {
+      return res.status(500).json({ message: "Batch notification failed" });
     }
   });
 
