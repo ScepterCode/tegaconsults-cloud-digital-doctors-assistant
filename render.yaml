@@ -1,5 +1,5 @@
 services:
-  # Python FastAPI Backend (Main API)
+  # Python FastAPI Backend (Main API) - Updated for static frontend
   - type: web
     name: dda-backend
     env: python
