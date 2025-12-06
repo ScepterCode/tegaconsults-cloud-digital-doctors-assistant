@@ -261,3 +261,55 @@ def ask_clinical_question(question: ClinicalQuestion, doctor_id: str, db: Sessio
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")
+
+@router.get("/summarize-files/{patient_id}")
+def summarize_patient_files(patient_id: str, doctor_id: str, db: Session = Depends(get_db)):
+    """AI summary of all patient medical files and documents"""
+    
+    from server_py.models.patient_file import PatientFile
+    
+    doctor = db.query(User).filter(User.id == doctor_id, User.role == "doctor").first()
+    if not doctor:
+        raise HTTPException(status_code=403, detail="Only doctors can access AI insights")
+    
+    patient = db.query(Patient).filter(Patient.id == patient_id).first()
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    # Get all patient files
+    files = db.query(PatientFile).filter(
+        PatientFile.patient_id == patient_id
+    ).order_by(PatientFile.uploaded_at.desc()).all()
+    
+    if not files:
+        raise HTTPException(status_code=404, detail="No files found for this patient")
+    
+    # Prepare file data for AI
+    files_data = [{
+        "file_name": f.file_name,
+        "file_type": f.file_type,
+        "description": f.description,
+        "uploaded_at": f.uploaded_at.isoformat() if f.uploaded_at else None,
+        "uploaded_by": f.uploaded_by
+    } for f in files]
+    
+    patient_data = {
+        "firstName": patient.first_name,
+        "lastName": patient.last_name,
+        "age": patient.age,
+        "gender": patient.gender,
+        "bloodGroup": patient.blood_group,
+        "genotype": patient.genotype
+    }
+    
+    try:
+        ai_assistant = AIClinicalAssistant()
+        summary = ai_assistant.summarize_patient_files(files_data, patient_data)
+        
+        return {
+            "summary": summary,
+            "files_analyzed": len(files_data),
+            "patient": patient_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI service error: {str(e)}")

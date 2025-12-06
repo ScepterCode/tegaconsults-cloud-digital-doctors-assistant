@@ -58,11 +58,12 @@ export default function DepartmentTeamManagement() {
     }
   });
 
-  // Users for assignment
+  // Users for assignment - get staff from the hospital
+  const hospitalId = "5f98058e-9bd6-4c92-9f8f-13b58b4c36f9";
   const { data: usersData } = useQuery({
-    queryKey: ["users"],
+    queryKey: ["users", hospitalId],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/system-admin/users");
+      const res = await apiRequest("GET", `/api/staff/hospital/${hospitalId}`);
       return res.json();
     }
   });
@@ -93,13 +94,33 @@ export default function DepartmentTeamManagement() {
     }
   });
 
+  // Assign staff to department
+  const [showAssignDialog, setShowAssignDialog] = useState(false);
+  const [assignToDeptId, setAssignToDeptId] = useState<string | null>(null);
+  
+  const assignStaffMutation = useMutation({
+    mutationFn: async (data: { user_id: string; department_id: string }) => {
+      const res = await apiRequest("POST", `/api/department-management/assign-staff?admin_id=${user?.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["departments"] });
+      queryClient.invalidateQueries({ queryKey: ["department-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["users", hospitalId] });
+      toast({ title: "Staff assigned successfully" });
+      setShowAssignDialog(false);
+      setAssignToDeptId(null);
+    }
+  });
+
   const handleCreateDept = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     createDeptMutation.mutate({
       name: formData.get("name"),
       description: formData.get("description"),
-      head_staff_id: formData.get("head_staff_id") || null
+      head_staff_id: formData.get("head_staff_id") || null,
+      hospital_id: hospitalId
     });
   };
 
@@ -117,7 +138,7 @@ export default function DepartmentTeamManagement() {
 
   const departments = deptsData?.departments || [];
   const teams = teamsData?.teams || [];
-  const users = usersData?.users || [];
+  const users = usersData || []; // API returns array directly, not {users: []}
 
   return (
     <div className="space-y-6">
@@ -232,6 +253,17 @@ export default function DepartmentTeamManagement() {
                             <span>{dept.staffCount} staff members</span>
                           </div>
                         </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setAssignToDeptId(dept.id);
+                            setShowAssignDialog(true);
+                          }}
+                        >
+                          <UserPlus className="h-4 w-4 mr-2" />
+                          Assign Staff
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -396,6 +428,50 @@ export default function DepartmentTeamManagement() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Assign Staff Dialog */}
+      <Dialog open={showAssignDialog} onOpenChange={setShowAssignDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Staff to Department</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            const formData = new FormData(e.currentTarget);
+            const userId = formData.get("user_id") as string;
+            if (userId && assignToDeptId) {
+              assignStaffMutation.mutate({
+                user_id: userId,
+                department_id: assignToDeptId
+              });
+            }
+          }} className="space-y-4">
+            <div>
+              <Label>Select Staff Member</Label>
+              <Select name="user_id" required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a staff member" />
+                </SelectTrigger>
+                <SelectContent>
+                  {users.map((user: any) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.fullName} - {user.role}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setShowAssignDialog(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={assignStaffMutation.isPending}>
+                {assignStaffMutation.isPending ? "Assigning..." : "Assign"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

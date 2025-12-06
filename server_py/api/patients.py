@@ -38,9 +38,24 @@ def patient_to_dict(patient) -> Dict[str, Any]:
     }
 
 @router.get("/patients")
-def get_all_patients(db: Session = Depends(get_db)):
-    storage = StorageService(db)
-    patients = storage.get_all_patients()
+def get_all_patients(
+    doctor_id: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get patients. If doctor_id is provided, returns only patients assigned to that doctor.
+    Otherwise returns all patients (for admins).
+    """
+    from server_py.models.patient import Patient
+    
+    if doctor_id:
+        # Filter by assigned doctor
+        patients = db.query(Patient).filter(Patient.assigned_doctor_id == doctor_id).all()
+    else:
+        # Return all patients
+        storage = StorageService(db)
+        patients = storage.get_all_patients()
+    
     return [patient_to_dict(p) for p in patients]
 
 @router.get("/patients/search")

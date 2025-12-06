@@ -64,7 +64,7 @@ export function LabResultsDisplay({ patientId }: LabResultsDisplayProps) {
 
   return (
     <div className="space-y-4">
-      {labResults.map((result) => {
+      {(labResults || []).map((result) => {
         const analysis = result.automatedAnalysis ? JSON.parse(result.automatedAnalysis) : null;
 
         return (

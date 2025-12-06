@@ -39,6 +39,7 @@ def create_department(dept_data: DepartmentCreate, admin_id: str, db: Session = 
         description=dept_data.description,
         head_staff_id=dept_data.head_staff_id,
         hospital_id=dept_data.hospital_id or admin.hospital_id,
+        hospital_admin_id=admin_id,
         status="active",
         created_by=admin_id
     )
@@ -194,6 +195,97 @@ def get_department_stats(hospital_id: Optional[str] = None, db: Session = Depend
         "active_departments": active_departments,
         "department_stats": dept_stats
     }
+
+@router.get("/user/{user_id}")
+def get_user_department_info(user_id: str, db: Session = Depends(get_db)):
+    """Get department and team information for a specific user"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    result = {
+        "user_id": user_id,
+        "department": None,
+        "departments_leading": [],
+        "teams": []
+    }
+    
+    # Get department info (if user is a member)
+    if user.department_id:
+        department = db.query(Department).filter(Department.id == user.department_id).first()
+        if department:
+            head_staff = None
+            if department.head_staff_id:
+                head = db.query(User).filter(User.id == department.head_staff_id).first()
+                if head:
+                    head_staff = {"id": head.id, "name": head.full_name}
+            
+            result["department"] = {
+                "id": department.id,
+                "name": department.name,
+                "description": department.description,
+                "head_staff": head_staff,
+                "status": department.status,
+                "is_head": department.head_staff_id == user_id
+            }
+    
+    # Get departments where user is the head (even if not a member)
+    departments_as_head = db.query(Department).filter(Department.head_staff_id == user_id).all()
+    for dept in departments_as_head:
+        # Skip if already included as member
+        if result["department"] and result["department"]["id"] == dept.id:
+            continue
+        
+        result["departments_leading"].append({
+            "id": dept.id,
+            "name": dept.name,
+            "description": dept.description,
+            "status": dept.status,
+            "is_head": True
+        })
+    
+    # Get teams the user is part of
+    from server_py.models.team import Team
+    from server_py.models.team_member import TeamMember
+    team_memberships = db.query(TeamMember).filter(TeamMember.user_id == user_id).all()
+    
+    for membership in team_memberships:
+        team = db.query(Team).filter(Team.id == membership.team_id).first()
+        if team:
+            team_lead = None
+            if team.team_lead_id:
+                lead = db.query(User).filter(User.id == team.team_lead_id).first()
+                if lead:
+                    team_lead = {"id": lead.id, "name": lead.full_name}
+            
+            result["teams"].append({
+                "id": team.id,
+                "name": team.name,
+                "team_type": team.team_type,
+                "description": team.description,
+                "team_lead": team_lead,
+                "is_lead": team.team_lead_id == user_id,
+                "status": team.status
+            })
+    
+    # Also get teams where user is lead but not a member
+    teams_as_lead = db.query(Team).filter(Team.team_lead_id == user_id).all()
+    for team in teams_as_lead:
+        # Skip if already included as member
+        if any(t["id"] == team.id for t in result["teams"]):
+            continue
+        
+        result["teams"].append({
+            "id": team.id,
+            "name": team.name,
+            "team_type": team.team_type,
+            "description": team.description,
+            "team_lead": {"id": user_id, "name": user.full_name},
+            "is_lead": True,
+            "status": team.status
+        })
+    
+    return result
 
 def serialize_department(department: Department, db: Session):
     head_staff = None

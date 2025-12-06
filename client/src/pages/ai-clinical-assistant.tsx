@@ -97,6 +97,26 @@ export default function AIClinicalAssistant() {
     }
   });
 
+  // Get patient files
+  const { data: filesData } = useQuery({
+    queryKey: ["patient-files", patientId],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/patient-files/patient/${patientId}`);
+      return res.json();
+    },
+    enabled: !!patientId
+  });
+
+  // Summarize files with AI
+  const { data: filesSummaryData, refetch: refetchFilesSummary, isLoading: filesSummaryLoading } = useQuery({
+    queryKey: ["ai-files-summary", patientId],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/ai-clinical-insights/summarize-files/${patientId}?doctor_id=${user?.id}`);
+      return res.json();
+    },
+    enabled: false // Only run when button is clicked
+  });
+
   // Create note
   const createNoteMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -210,6 +230,7 @@ export default function AIClinicalAssistant() {
       <Tabs defaultValue="summary" className="space-y-4">
         <TabsList>
           <TabsTrigger value="summary">AI Summary</TabsTrigger>
+          <TabsTrigger value="files">Patient Files</TabsTrigger>
           <TabsTrigger value="lab-analysis">Lab Analysis</TabsTrigger>
           <TabsTrigger value="treatment">Treatment</TabsTrigger>
           <TabsTrigger value="risk">Risk Assessment</TabsTrigger>
@@ -250,6 +271,94 @@ export default function AIClinicalAssistant() {
                     <Sparkles className="h-4 w-4 mr-2" />
                     Generate AI Summary
                   </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="files">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-orange-600" />
+                    Patient Medical Files
+                  </CardTitle>
+                  <CardDescription>
+                    View all uploaded medical documents and get AI insights
+                  </CardDescription>
+                </div>
+                {filesData?.files && filesData.files.length > 0 && (
+                  <Button 
+                    onClick={() => refetchFilesSummary()}
+                    disabled={filesSummaryLoading}
+                    variant="outline"
+                  >
+                    <Sparkles className="h-4 w-4 mr-2" />
+                    {filesSummaryLoading ? "Analyzing..." : "AI Summary"}
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* AI Summary Section */}
+              {filesSummaryData?.summary && (
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-4">
+                  <div className="flex items-start gap-2 mb-2">
+                    <Brain className="h-5 w-5 text-purple-600 mt-0.5" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-purple-900 mb-2">AI Folder Summary</h3>
+                      <div className="text-sm text-gray-700 whitespace-pre-wrap">
+                        {filesSummaryData.summary}
+                      </div>
+                      <div className="mt-3 text-xs text-purple-700">
+                        📁 {filesSummaryData.files_analyzed} files analyzed
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Files List */}
+              {filesData?.files && filesData.files.length > 0 ? (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-sm text-muted-foreground">All Files ({filesData.files.length})</h3>
+                  {filesData.files.map((file: any) => (
+                    <div key={file.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <FileText className="h-4 w-4 text-blue-600" />
+                            <span className="font-medium">{file.fileName}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {file.fileType || "Document"}
+                            </Badge>
+                          </div>
+                          {file.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{file.description}</p>
+                          )}
+                          <div className="flex gap-4 mt-2 text-xs text-muted-foreground">
+                            <span>Uploaded: {new Date(file.uploadedAt).toLocaleDateString()}</span>
+                            <span>By: {file.uploadedBy}</span>
+                            {file.fileSize && <span>Size: {(file.fileSize / 1024).toFixed(1)} KB</span>}
+                          </div>
+                        </div>
+                        <Button variant="ghost" size="sm" asChild>
+                          <a href={`/api/patient-files/download/${file.id}`} target="_blank" rel="noopener noreferrer">
+                            View
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No medical files uploaded yet</p>
+                  <p className="text-sm mt-2">Files can be uploaded from the Medical History page</p>
                 </div>
               )}
             </CardContent>

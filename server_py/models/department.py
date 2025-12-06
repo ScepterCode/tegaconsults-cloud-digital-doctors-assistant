@@ -7,6 +7,7 @@ class Department(Base):
     
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
     hospital_id = Column(String, nullable=True)
+    hospital_admin_id = Column(String, nullable=False)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
     head_staff_id = Column(String, nullable=True)

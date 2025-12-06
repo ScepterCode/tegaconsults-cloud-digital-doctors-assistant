@@ -35,7 +35,7 @@ export default function PatientAssignments() {
   const { data: doctorsData } = useQuery({
     queryKey: ["doctors"],
     queryFn: async () => {
-      const res = await apiRequest("GET", "/api/system-admin/users?role=doctor");
+      const res = await apiRequest("GET", "/api/admin/users?role=doctor");
       return res.json();
     }
   });
@@ -179,11 +179,17 @@ export default function PatientAssignments() {
                     <SelectValue placeholder="Assign to doctor" />
                   </SelectTrigger>
                   <SelectContent>
-                    {doctors.map((doctor: any) => (
-                      <SelectItem key={doctor.id} value={doctor.id}>
-                        {doctor.full_name}
-                      </SelectItem>
-                    ))}
+                    {doctors.length > 0 ? (
+                      doctors.map((doctor: any) => (
+                        <SelectItem key={doctor.id} value={doctor.id}>
+                          {doctor.full_name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="p-2 text-sm text-muted-foreground">
+                        No doctors available
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -244,11 +250,17 @@ export default function PatientAssignments() {
                           <SelectValue placeholder="Select doctor" />
                         </SelectTrigger>
                         <SelectContent>
-                          {doctors.map((doctor: any) => (
-                            <SelectItem key={doctor.id} value={doctor.id}>
-                              {doctor.full_name}
-                            </SelectItem>
-                          ))}
+                          {doctors.length > 0 ? (
+                            doctors.map((doctor: any) => (
+                              <SelectItem key={doctor.id} value={doctor.id}>
+                                {doctor.full_name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="p-2 text-sm text-muted-foreground">
+                              No doctors available
+                            </div>
+                          )}
                         </SelectContent>
                       </Select>
                     </TableCell>

@@ -137,7 +137,7 @@ export default function HealthChatbot() {
   ];
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex flex-col space-y-4">
+    <div className="container mx-auto p-6 space-y-4">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
@@ -154,11 +154,11 @@ export default function HealthChatbot() {
         </Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 flex-1 overflow-hidden">
-        <div className="lg:col-span-3 flex flex-col">
-          <Card className="flex-1 flex flex-col">
-            <CardContent className="flex-1 flex flex-col p-0">
-              <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        <div className="lg:col-span-3">
+          <Card>
+            <CardContent className="p-0">
+              <ScrollArea className="h-[500px] p-4" ref={scrollRef}>
                 <div className="space-y-4">
                   {messages.map((message, index) => (
                     <div
@@ -205,24 +205,33 @@ export default function HealthChatbot() {
                   )}
                 </div>
               </ScrollArea>
+            </CardContent>
+          </Card>
 
-              <div className="p-4 border-t">
-                <div className="flex gap-2">
-                  <Input
-                    value={inputMessage}
-                    onChange={(e) => setInputMessage(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-                    placeholder="Ask a health question..."
-                    disabled={isTyping}
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!inputMessage.trim() || isTyping}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
+          {/* Input Section - Separate Card */}
+          <Card className="mt-4">
+            <CardContent className="p-4">
+              <div className="flex gap-2">
+                <Input
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+                  placeholder="Type your health question here..."
+                  disabled={isTyping}
+                  className="flex-1"
+                />
+                <Button
+                  onClick={handleSendMessage}
+                  disabled={!inputMessage.trim() || isTyping}
+                  size="lg"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  Send
+                </Button>
               </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                Press Enter to send • Dr. Tega is powered by AI
+              </p>
             </CardContent>
           </Card>
         </div>

@@ -13,7 +13,8 @@ import {
   UserCheck,
   Brain,
   Bot,
-  BookOpen
+  BookOpen,
+  Package
 } from "lucide-react";
 import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Link, useLocation } from "wouter";
@@ -77,10 +78,16 @@ export function AppSidebar() {
       roles: ["system_admin", "hospital_admin", "admin", "doctor", "nurse"],
     },
     {
+      title: "Subscriptions",
+      url: "/system-subscriptions",
+      icon: CreditCard,
+      roles: ["system_admin"],
+    },
+    {
       title: "Patient Assignments",
       url: "/patient-assignments",
       icon: UserCheck,
-      roles: ["system_admin", "hospital_admin"],
+      roles: ["hospital_admin"],
     },
     {
       title: "Departments & Teams",
@@ -125,10 +132,22 @@ export function AppSidebar() {
       roles: ["admin"],
     },
     {
-      title: "Billing",
+      title: "Subscription & Billing",
+      url: "/subscription",
+      icon: CreditCard,
+      roles: ["hospital_admin"],
+    },
+    {
+      title: "Pharmacy Inventory",
+      url: "/pharmacy-inventory",
+      icon: Package,
+      roles: ["pharmacist", "hospital_admin"],
+    },
+    {
+      title: "Billing & Payments",
       url: "/billing",
       icon: CreditCard,
-      roles: ["admin", "doctor", "nurse", "patient"],
+      roles: ["accountant", "accounts_manager", "hospital_admin"],
     },
     {
       title: "Department Dashboard",

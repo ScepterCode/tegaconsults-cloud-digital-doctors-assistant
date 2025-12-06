@@ -260,4 +260,62 @@ Please provide a clear, evidence-based answer that helps the physician make info
         for result in lab_results[:10]:  # Limit to recent 10 results
             formatted.append(f"- {result.get('testName', 'Test')}: {result.get('result', 'N/A')} (Status: {result.get('status', 'Unknown')})")
         return "\n".join(formatted)
+    
+    def summarize_patient_files(self, files: List[Dict], patient_data: Dict) -> str:
+        """Generate AI summary of patient's medical files and documents"""
+        
+        prompt = f"""You are an expert medical AI assistant reviewing a patient's medical records folder.
+
+Patient Information:
+- Name: {patient_data.get('firstName')} {patient_data.get('lastName')}
+- Age: {patient_data.get('age')} years
+- Gender: {patient_data.get('gender')}
+- Blood Group: {patient_data.get('bloodGroup')}
+- Genotype: {patient_data.get('genotype')}
+
+Medical Files in Folder ({len(files)} files):
+{self._format_files(files)}
+
+Please provide a concise summary (3-5 sentences) covering:
+1. Overview of the types of medical documents available
+2. Key findings or patterns across the documents
+3. Any notable test results or diagnoses mentioned
+4. Completeness of the medical record (what's present/missing)
+
+Keep it brief, professional, and actionable for the treating physician."""
+
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            data = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "You are an expert medical AI assistant helping doctors review patient medical records."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.3,
+                "max_tokens": 500
+            }
+            response = requests.post(self.api_url, headers=headers, json=data, timeout=30)
+            response.raise_for_status()
+            return response.json()["choices"][0]["message"]["content"]
+        except Exception as e:
+            return f"Error generating files summary: {str(e)}"
+    
+    def _format_files(self, files: List[Dict]) -> str:
+        """Format patient files for AI processing"""
+        if not files:
+            return "No files available."
+        
+        formatted = []
+        for file in files:
+            file_info = f"- {file.get('file_type', 'Document')}: {file.get('file_name', 'Unnamed')}"
+            if file.get('description'):
+                file_info += f" - {file.get('description')}"
+            if file.get('uploaded_at'):
+                file_info += f" (Uploaded: {file.get('uploaded_at')[:10]})"
+            formatted.append(file_info)
+        return "\n".join(formatted)
 

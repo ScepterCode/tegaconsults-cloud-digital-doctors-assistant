@@ -48,7 +48,7 @@ async def list_hospital_staff(hospital_id: str, db: Session = Depends(get_db)):
     """List all staff members in a hospital"""
     staff = db.query(User).filter(
         User.hospital_id == hospital_id,
-        User.role.in_(["hospital_admin", "doctor", "nurse", "pharmacist", "lab_tech", "receptionist"])
+        User.role.in_(["hospital_admin", "doctor", "nurse", "pharmacist", "lab_tech", "receptionist", "accountant", "accounts_manager"])
     ).all()
     return staff
 

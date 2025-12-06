@@ -29,6 +29,12 @@ from server_py.api.doctor_notes import router as doctor_notes_router
 from server_py.api.ai_clinical_insights import router as ai_clinical_insights_router
 from server_py.api.health_chatbot import router as health_chatbot_router
 from server_py.api.diary import router as diary_router
+from server_py.api.patient_files import router as patient_files_router
+from server_py.api.prescriptions import router as prescriptions_router
+from server_py.api.subscriptions import router as subscriptions_router
+from server_py.api.pharmacy_inventory import router as pharmacy_inventory_router
+from server_py.api.billing import router as billing_router
+from server_py.api.patient_timeline import router as patient_timeline_router
 from server_py.db.session import engine, Base
 from server_py.services.storage import StorageService
 from server_py.db.session import SessionLocal
@@ -68,6 +74,12 @@ app.include_router(doctor_notes_router)
 app.include_router(ai_clinical_insights_router)
 app.include_router(health_chatbot_router)
 app.include_router(diary_router)
+app.include_router(patient_files_router)
+app.include_router(prescriptions_router)
+app.include_router(subscriptions_router)
+app.include_router(pharmacy_inventory_router)
+app.include_router(billing_router)
+app.include_router(patient_timeline_router)
 
 @app.on_event("startup")
 async def startup_event():

@@ -11,6 +11,8 @@ import {
   TrendingUp,
   Pill,
   Activity,
+  Building2,
+  Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,8 +49,16 @@ export default function Dashboard() {
   const [showCDS, setShowCDS] = useState(false);
   const [statusFilter, setStatusFilter] = useState<PatientStatusFilter>("all");
 
-  const { data: patients, isLoading: patientsLoading } = useQuery<Patient[]>({
-    queryKey: ["/api/patients"],
+  const { data: patients, isLoading: patientsLoading} = useQuery<Patient[]>({
+    queryKey: ["/api/patients", user?.role === "doctor" ? user?.id : null],
+    queryFn: async () => {
+      // Doctors only see their assigned patients
+      const url = user?.role === "doctor" 
+        ? `/api/patients?doctor_id=${user.id}`
+        : "/api/patients";
+      const res = await apiRequest("GET", url);
+      return res.json();
+    }
   });
 
   const searchMutation = useMutation({
@@ -278,6 +288,9 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="px-6 py-8">
         <div className="max-w-7xl mx-auto space-y-6">
+          
+          {/* User Profile Card with Department/Team Info */}
+          <UserProfileCard userId={user?.id} />
           {/* Search Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
@@ -817,5 +830,111 @@ export default function Dashboard() {
       {/* Chatbot */}
       <ChatBot />
     </div>
+  );
+}
+
+// User Profile Card Component
+function UserProfileCard({ userId }: { userId?: string }) {
+  const { data: userInfo, isLoading } = useQuery({
+    queryKey: ["user-department-info", userId],
+    queryFn: async () => {
+      const res = await apiRequest("GET", `/api/department-management/user/${userId}`);
+      return res.json();
+    },
+    enabled: !!userId
+  });
+
+  if (isLoading || !userInfo) {
+    return null;
+  }
+
+  // Only show if user has department or team assignments
+  const hasDepartments = userInfo.department || (userInfo.departments_leading && userInfo.departments_leading.length > 0);
+  const hasTeams = userInfo.teams && userInfo.teams.length > 0;
+  
+  if (!hasDepartments && !hasTeams) {
+    return null;
+  }
+
+  return (
+    <Card className="border-blue-200 bg-blue-50/30">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <Building2 className="h-5 w-5 text-blue-600" />
+          My Department & Teams
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Department Info */}
+          {(userInfo.department || (userInfo.departments_leading && userInfo.departments_leading.length > 0)) && (
+            <div className="bg-white rounded-lg p-4 border">
+              <div className="flex items-center gap-2 mb-2">
+                <Building2 className="h-4 w-4 text-blue-600" />
+                <h3 className="font-semibold">Department</h3>
+              </div>
+              
+              {/* Member of department */}
+              {userInfo.department && (
+                <div className="mb-3">
+                  <p className="text-lg font-medium text-blue-900">{userInfo.department.name}</p>
+                  {userInfo.department.description && (
+                    <p className="text-sm text-muted-foreground mt-1">{userInfo.department.description}</p>
+                  )}
+                  {userInfo.department.is_head && (
+                    <Badge className="mt-2 bg-yellow-100 text-yellow-900">Department Head</Badge>
+                  )}
+                  {userInfo.department.head_staff && !userInfo.department.is_head && (
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Head: {userInfo.department.head_staff.name}
+                    </p>
+                  )}
+                  <Badge className="mt-2" variant={userInfo.department.status === "active" ? "default" : "secondary"}>
+                    {userInfo.department.status}
+                  </Badge>
+                </div>
+              )}
+              
+              {/* Leading departments (not a member) */}
+              {userInfo.departments_leading && userInfo.departments_leading.map((dept: any) => (
+                <div key={dept.id} className="mb-3 border-l-4 border-yellow-500 pl-3">
+                  <p className="text-lg font-medium text-blue-900">{dept.name}</p>
+                  {dept.description && (
+                    <p className="text-sm text-muted-foreground mt-1">{dept.description}</p>
+                  )}
+                  <Badge className="mt-2 bg-yellow-100 text-yellow-900">Department Head</Badge>
+                  <Badge className="mt-2 ml-2" variant={dept.status === "active" ? "default" : "secondary"}>
+                    {dept.status}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Teams Info */}
+          {hasTeams && (
+            <div className="bg-white rounded-lg p-4 border">
+              <div className="flex items-center gap-2 mb-2">
+                <Users className="h-4 w-4 text-green-600" />
+                <h3 className="font-semibold">Teams ({userInfo.teams.length})</h3>
+              </div>
+              <div className="space-y-2">
+                {userInfo.teams.map((team: any) => (
+                  <div key={team.id} className={`border-l-2 ${team.is_lead ? 'border-yellow-500' : 'border-green-500'} pl-3`}>
+                    <p className="font-medium text-green-900">{team.name}</p>
+                    <p className="text-xs text-muted-foreground">{team.team_type}</p>
+                    {team.is_lead && (
+                      <Badge className="text-xs mt-1 bg-yellow-100 text-yellow-900">
+                        Team Lead
+                      </Badge>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

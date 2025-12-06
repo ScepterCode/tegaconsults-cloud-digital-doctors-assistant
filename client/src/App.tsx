@@ -33,6 +33,13 @@ import DepartmentTeamManagement from "@/pages/department-team-management";
 import AIClinicalAssistant from "@/pages/ai-clinical-assistant";
 import HealthChatbot from "@/pages/health-chatbot";
 import PersonalDiary from "@/pages/personal-diary";
+import PatientMedicalHistory from "@/pages/patient-medical-history";
+import PatientTimeline from "@/pages/patient-timeline";
+import PharmacistPrescriptions from "@/pages/pharmacist-prescriptions";
+import HospitalSubscription from "@/pages/hospital-subscription";
+import SystemAdminSubscriptions from "@/pages/system-admin-subscriptions";
+import PharmacyInventory from "@/pages/pharmacy-inventory";
+import BillingDashboard from "@/pages/billing-dashboard";
 import NotFound from "@/pages/not-found";
 
 function AppRoutes() {
@@ -119,7 +126,7 @@ function AppRoutes() {
                     <DoctorAppointments />
                   </ProtectedRoute>
                 </Route>
-                <Route path="/billing">
+                <Route path="/old-subscription-billing">
                   <ProtectedRoute>
                     <Billing />
                   </ProtectedRoute>
@@ -141,7 +148,7 @@ function AppRoutes() {
                 </Route>
                 <Route path="/hospital-admin">
                   <ProtectedRoute requiredRoles={["hospital_admin", "system_admin"]}>
-                    <HospitalAdminDashboard hospitalId="test-hospital-id" hospitalName="Test Hospital" />
+                    <HospitalAdminDashboard hospitalId="5f98058e-9bd6-4c92-9f8f-13b58b4c36f9" hospitalName="Test Hospital" />
                   </ProtectedRoute>
                 </Route>
                 <Route path="/tickets">
@@ -167,6 +174,41 @@ function AppRoutes() {
                 <Route path="/telemedicine/:sessionId">
                   <ProtectedRoute requiredRoles={["doctor", "patient", "system_admin"]}>
                     <TelemedicineConsultation />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/medical-history">
+                  <ProtectedRoute requiredRoles={["doctor", "nurse", "lab_tech", "pharmacist", "admin", "system_admin"]}>
+                    <PatientMedicalHistory />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/patient-timeline/:patientId">
+                  <ProtectedRoute requiredRoles={["doctor", "nurse", "hospital_admin", "system_admin"]}>
+                    <PatientTimeline />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/prescriptions">
+                  <ProtectedRoute requiredRoles={["pharmacist", "doctor", "admin", "system_admin"]}>
+                    <PharmacistPrescriptions />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/subscription">
+                  <ProtectedRoute requiredRoles={["hospital_admin", "system_admin"]}>
+                    <HospitalSubscription />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/system-subscriptions">
+                  <ProtectedRoute requiredRoles={["system_admin"]}>
+                    <SystemAdminSubscriptions />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/pharmacy-inventory">
+                  <ProtectedRoute requiredRoles={["pharmacist", "hospital_admin", "system_admin"]}>
+                    <PharmacyInventory />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/billing">
+                  <ProtectedRoute requiredRoles={["accountant", "accounts_manager", "hospital_admin", "system_admin"]}>
+                    <BillingDashboard />
                   </ProtectedRoute>
                 </Route>
                 <Route path="/">
