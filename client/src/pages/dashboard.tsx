@@ -42,7 +42,8 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchType, setSearchType] = useState<"general" | "nin" | "fingerprint" | "facial">(
+  // SUSPENDED: Facial recognition feature
+  const [searchType, setSearchType] = useState<"general" | "nin" | "fingerprint">(
     "general"
   );
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
@@ -324,6 +325,7 @@ export default function Dashboard() {
                   >
                     Fingerprint
                   </Button>
+                  {/* SUSPENDED: Facial recognition feature
                   <Button
                     size="sm"
                     variant={searchType === "facial" ? "default" : "outline"}
@@ -332,6 +334,7 @@ export default function Dashboard() {
                   >
                     Facial Recognition
                   </Button>
+                  */}
                 </div>
 
                 <div className="flex gap-3 flex-wrap items-center">

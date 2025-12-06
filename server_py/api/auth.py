@@ -52,8 +52,9 @@ def login(request: LoginRequest, db: Session = Depends(get_db)) -> Dict[str, Any
         user = storage.get_user_by_nin(request.nin)
     elif request.auth_method == "fingerprint":
         user = storage.get_user_by_fingerprint(request.fingerprint_data)
-    elif request.auth_method == "facial":
-        user = storage.get_user_by_facial(request.facial_data)
+    # SUSPENDED: Facial recognition feature
+    # elif request.auth_method == "facial":
+    #     user = storage.get_user_by_facial(request.facial_data)
     
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")

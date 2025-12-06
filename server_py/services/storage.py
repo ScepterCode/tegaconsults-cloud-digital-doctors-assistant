@@ -28,8 +28,9 @@ class StorageService:
     def get_user_by_fingerprint(self, fingerprint_data: str) -> Optional[User]:
         return None
     
-    def get_user_by_facial(self, facial_data: str) -> Optional[User]:
-        return None
+    # SUSPENDED: Facial recognition feature
+    # def get_user_by_facial(self, facial_data: str) -> Optional[User]:
+    #     return None
     
     def create_user(self, user_data: dict) -> User:
         user = User(
@@ -73,8 +74,9 @@ class StorageService:
     def get_patient_by_fingerprint(self, fingerprint_data: str) -> Optional[Patient]:
         return self.db.query(Patient).filter(Patient.fingerprint_data == fingerprint_data).first()
     
-    def get_patient_by_facial(self, facial_data: str) -> Optional[Patient]:
-        return self.db.query(Patient).filter(Patient.facial_recognition_data == facial_data).first()
+    # SUSPENDED: Facial recognition feature
+    # def get_patient_by_facial(self, facial_data: str) -> Optional[Patient]:
+    #     return self.db.query(Patient).filter(Patient.facial_recognition_data == facial_data).first()
     
     def search_patients(self, query: str) -> List[Patient]:
         search_term = f"%{query}%"
