@@ -26,10 +26,14 @@ services:
     plan: free
     rootDir: client
     buildCommand: "npm install && npm run build"
-    startCommand: "npm run preview -- --host 0.0.0.0 --port $PORT"
+    startCommand: "npm start"
     envVars:
       - key: VITE_API_URL
         value: https://tegaconsults-cloud-digital-doctors.onrender.com
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: $PORT
     healthCheckPath: /
 
 databases:
