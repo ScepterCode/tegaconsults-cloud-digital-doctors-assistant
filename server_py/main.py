@@ -47,7 +47,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "https://dda-frontend.onrender.com",  # Production frontend
+        "http://localhost:5173",              # Local development
+        "http://localhost:3000",              # Alternative local port
+        "*"                                    # Allow all (can remove in production)
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
