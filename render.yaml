@@ -3,7 +3,9 @@ services:
   - type: web
     name: dda-backend
     env: python
-    buildCommand: "pip install -r requirements.txt"
+    region: oregon
+    plan: free
+    buildCommand: "cd server_py && pip install -r ../requirements.txt"
     startCommand: "uvicorn server_py.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: PYTHON_VERSION
@@ -19,15 +21,18 @@ services:
   # Frontend
   - type: web
     name: dda-frontend
-    env: static
-    buildCommand: "npm install && npm run build"
-    staticPublishPath: ./dist/public
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: "cd client && npm install && npm run build"
+    startCommand: "cd client && npm run preview -- --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: VITE_API_URL
+        value: https://dda-backend.onrender.com
+    healthCheckPath: /
 
 databases:
   - name: dda-database
     databaseName: digital_doctors
     user: dda_user
+    plan: free
