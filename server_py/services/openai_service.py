@@ -1,24 +1,18 @@
 from typing import Dict, Any, Optional
 import os
 import json
+import requests
 
-try:
-    from openai import OpenAI
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    OpenAI = None
+OPENAI_AVAILABLE = True
 
 class OpenAIService:
     def __init__(self):
-        self.client = None
-        if OPENAI_AVAILABLE:
-            api_key = os.getenv("OPENAI_API_KEY")
-            if api_key:
-                self.client = OpenAI(api_key=api_key)
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.api_url = "https://api.openai.com/v1/chat/completions"
+        self.model = "gpt-4o-mini"
     
     def is_available(self) -> bool:
-        return self.client is not None
+        return self.api_key is not None
     
     async def get_diagnosis_assistance(self, symptoms: str, patient_data: Dict[str, Any]) -> Dict[str, Any]:
         if not self.is_available():

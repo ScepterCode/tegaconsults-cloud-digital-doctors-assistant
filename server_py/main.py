@@ -3,6 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 from server_py.api.auth import router as auth_router
 from server_py.api.patients import router as patients_router
@@ -12,6 +16,19 @@ from server_py.api.departments import router as departments_router
 from server_py.api.notifications import router as notifications_router
 from server_py.api.nlp import router as nlp_router
 from server_py.api.llm import router as llm_router
+from server_py.api.hospitals import router as hospitals_router
+from server_py.api.staff import router as staff_router
+from server_py.api.telemedicine import router as telemedicine_router
+from server_py.api.clinical_integrations import router as clinical_integrations_router
+from server_py.api.system_admin import router as system_admin_router
+from server_py.api.tickets import router as tickets_router
+from server_py.api.patient_assignments import router as patient_assignments_router
+from server_py.api.department_management import router as department_management_router
+from server_py.api.team_management import router as team_management_router
+from server_py.api.doctor_notes import router as doctor_notes_router
+from server_py.api.ai_clinical_insights import router as ai_clinical_insights_router
+from server_py.api.health_chatbot import router as health_chatbot_router
+from server_py.api.diary import router as diary_router
 from server_py.db.session import engine, Base
 from server_py.services.storage import StorageService
 from server_py.db.session import SessionLocal
@@ -38,10 +55,26 @@ app.include_router(departments_router)
 app.include_router(notifications_router)
 app.include_router(nlp_router)
 app.include_router(llm_router)
+app.include_router(hospitals_router)
+app.include_router(staff_router)
+app.include_router(telemedicine_router)
+app.include_router(clinical_integrations_router)
+app.include_router(system_admin_router)
+app.include_router(tickets_router)
+app.include_router(patient_assignments_router)
+app.include_router(department_management_router)
+app.include_router(team_management_router)
+app.include_router(doctor_notes_router)
+app.include_router(ai_clinical_insights_router)
+app.include_router(health_chatbot_router)
+app.include_router(diary_router)
 
 @app.on_event("startup")
 async def startup_event():
     print("Starting Digital Doctors Assistant Python Backend...")
+    
+    # Create all database tables
+    Base.metadata.create_all(bind=engine)
     
     db = SessionLocal()
     try:
@@ -55,7 +88,7 @@ async def startup_event():
                 "username": "admin",
                 "password": "paypass",
                 "fullName": "System Administrator",
-                "role": "admin",
+                "role": "system_admin",
                 "is_active": 1
             })
             

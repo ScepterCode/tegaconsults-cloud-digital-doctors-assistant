@@ -68,7 +68,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)) -> Dict[str, Any
             "fullName": user.full_name,
             "role": user.role,
             "departmentId": user.department_id,
-            "hospitalAdminId": user.hospital_admin_id,
+            "hospitalId": user.hospital_id,
             "isActive": user.is_active
         },
         "message": "Login successful"
@@ -85,7 +85,7 @@ def get_all_users(db: Session = Depends(get_db)):
             "fullName": u.full_name,
             "role": u.role,
             "departmentId": u.department_id,
-            "hospitalAdminId": u.hospital_admin_id,
+            "hospitalId": u.hospital_id,
             "isActive": u.is_active
         }
         for u in users
@@ -105,6 +105,6 @@ def get_user(user_id: str, db: Session = Depends(get_db)):
         "fullName": user.full_name,
         "role": user.role,
         "departmentId": user.department_id,
-        "hospitalAdminId": user.hospital_admin_id,
+        "hospitalId": user.hospital_id,
         "isActive": user.is_active
     }

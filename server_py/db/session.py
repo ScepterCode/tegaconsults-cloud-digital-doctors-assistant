@@ -4,7 +4,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from typing import Generator
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL", "")
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./local_dev.db")
+
+# Handle empty string case
+if not DATABASE_URL or DATABASE_URL.strip() == "":
+    DATABASE_URL = "sqlite:///./local_dev.db"
 
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)

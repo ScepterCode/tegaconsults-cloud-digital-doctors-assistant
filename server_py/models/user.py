@@ -10,7 +10,8 @@ class User(Base):
     password = Column(String, nullable=False)
     role = Column(String, nullable=False)
     full_name = Column(String, nullable=False)
-    hospital_admin_id = Column(String, nullable=True)
+    hospital_id = Column(String, nullable=True)  # Multi-tenant: links user to hospital
+    permissions = Column(String, nullable=True)  # JSON: granular permissions
     department_id = Column(String, nullable=True)
     is_active = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime, server_default=func.now())

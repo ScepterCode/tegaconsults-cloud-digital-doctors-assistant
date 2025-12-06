@@ -4,8 +4,9 @@ from typing import Dict, Any
 
 from server_py.db.session import get_db
 from server_py.services.storage import StorageService
-from server_py.services.advanced_llm_service import AdvancedLLMService
-from server_py.services.openai_service import OpenAIService
+# Temporarily disabled due to compatibility issues
+# from server_py.services.advanced_llm_service import AdvancedLLMService
+# from server_py.services.openai_service import OpenAIService
 
 router = APIRouter(prefix="/api/llm", tags=["Advanced LLM"])
 

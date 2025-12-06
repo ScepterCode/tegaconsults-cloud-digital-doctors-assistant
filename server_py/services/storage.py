@@ -38,7 +38,7 @@ class StorageService:
             password=user_data.get("password"),
             role=user_data.get("role"),
             full_name=user_data.get("full_name") or user_data.get("fullName"),
-            hospital_admin_id=user_data.get("hospital_admin_id") or user_data.get("hospitalAdminId"),
+            hospital_id=user_data.get("hospital_id") or user_data.get("hospitalId"),
             department_id=user_data.get("department_id") or user_data.get("departmentId"),
             is_active=user_data.get("is_active", 1)
         )

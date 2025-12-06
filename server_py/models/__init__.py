@@ -5,3 +5,6 @@ from .appointment import Appointment
 from .subscription import Subscription
 from .department import Department
 from .notification import Notification
+from .hospital import Hospital
+from .telemedicine_session import TelemedicineSession
+from .clinical_integration import ClinicalIntegration

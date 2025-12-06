@@ -9,6 +9,7 @@ import { Footer } from "@/components/footer";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/components/protected-route";
 import { ChatBot } from "@/components/chatbot";
+import { getRoleBasedDashboard } from "@/lib/navigation";
 import Login from "@/pages/login";
 import Register from "@/pages/register";
 import ForgotPassword from "@/pages/forgot-password";
@@ -23,10 +24,19 @@ import DoctorAppointments from "@/pages/doctor-appointments";
 import Billing from "@/pages/billing";
 import DepartmentDashboard from "@/pages/department-dashboard";
 import AdminDepartments from "@/pages/admin-departments";
+import SystemAdminDashboard from "@/pages/SystemAdminDashboard";
+import HospitalAdminDashboard from "@/pages/HospitalAdminDashboard";
+import TelemedicineConsultation from "@/pages/TelemedicineConsultation";
+import Tickets from "@/pages/tickets";
+import PatientAssignments from "@/pages/patient-assignments";
+import DepartmentTeamManagement from "@/pages/department-team-management";
+import AIClinicalAssistant from "@/pages/ai-clinical-assistant";
+import HealthChatbot from "@/pages/health-chatbot";
+import PersonalDiary from "@/pages/personal-diary";
 import NotFound from "@/pages/not-found";
 
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
     return (
@@ -67,6 +77,16 @@ function AppRoutes() {
                 <Route path="/dashboard">
                   <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/health-chatbot">
+                  <ProtectedRoute>
+                    <HealthChatbot />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/personal-diary">
+                  <ProtectedRoute>
+                    <PersonalDiary />
                   </ProtectedRoute>
                 </Route>
                 <Route path="/patients">
@@ -114,8 +134,49 @@ function AppRoutes() {
                     <AdminDepartments />
                   </ProtectedRoute>
                 </Route>
+                <Route path="/system-admin">
+                  <ProtectedRoute requiredRoles={["system_admin"]}>
+                    <SystemAdminDashboard />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/hospital-admin">
+                  <ProtectedRoute requiredRoles={["hospital_admin", "system_admin"]}>
+                    <HospitalAdminDashboard hospitalId="test-hospital-id" hospitalName="Test Hospital" />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/tickets">
+                  <ProtectedRoute>
+                    <Tickets />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/patient-assignments">
+                  <ProtectedRoute requiredRoles={["hospital_admin", "system_admin"]}>
+                    <PatientAssignments />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/departments-teams">
+                  <ProtectedRoute requiredRoles={["hospital_admin", "system_admin"]}>
+                    <DepartmentTeamManagement />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/ai-clinical/:patientId">
+                  <ProtectedRoute requiredRoles={["doctor"]}>
+                    <AIClinicalAssistant />
+                  </ProtectedRoute>
+                </Route>
+                <Route path="/telemedicine/:sessionId">
+                  <ProtectedRoute requiredRoles={["doctor", "patient", "system_admin"]}>
+                    <TelemedicineConsultation />
+                  </ProtectedRoute>
+                </Route>
                 <Route path="/">
-                  <Redirect to="/dashboard" />
+                  {() => {
+                    if (user) {
+                      const dashboardRoute = getRoleBasedDashboard(user.role);
+                      return <Redirect to={dashboardRoute} />;
+                    }
+                    return <Redirect to="/dashboard" />;
+                  }}
                 </Route>
                 <Route component={NotFound} />
               </Switch>

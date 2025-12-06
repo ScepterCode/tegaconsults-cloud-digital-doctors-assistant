@@ -4,7 +4,7 @@ from typing import Dict, Any
 
 from server_py.db.session import get_db
 from server_py.services.storage import StorageService
-from server_py.services.openai_service import OpenAIService
+# from server_py.services.openai_service import OpenAIService
 
 router = APIRouter(prefix="/api/lab-results", tags=["Lab Results"])
 

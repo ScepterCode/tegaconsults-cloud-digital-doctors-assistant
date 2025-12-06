@@ -8,7 +8,12 @@ import {
   Calendar,
   CreditCard,
   Building2,
-  Bell
+  Bell,
+  Ticket,
+  UserCheck,
+  Brain,
+  Bot,
+  BookOpen
 } from "lucide-react";
 import logoUrl from "@assets/DDA LOGO 2_1764200378521.jpeg";
 import { Link, useLocation } from "wouter";
@@ -36,10 +41,58 @@ export function AppSidebar() {
 
   const menuItems = [
     {
+      title: "System Admin",
+      url: "/system-admin",
+      icon: Building2,
+      roles: ["system_admin"],
+    },
+    {
+      title: "Hospital Admin",
+      url: "/hospital-admin",
+      icon: Building2,
+      roles: ["hospital_admin"],
+    },
+    {
       title: "Dashboard",
       url: "/dashboard",
       icon: LayoutDashboard,
       roles: ["admin", "doctor", "nurse", "patient"],
+    },
+    {
+      title: "Health Chatbot",
+      url: "/health-chatbot",
+      icon: Bot,
+      roles: ["system_admin", "hospital_admin", "admin", "doctor", "nurse", "patient", "pharmacist", "lab_tech", "receptionist"],
+    },
+    {
+      title: "Personal Diary",
+      url: "/personal-diary",
+      icon: BookOpen,
+      roles: ["system_admin", "hospital_admin", "admin", "doctor", "nurse", "patient", "pharmacist", "lab_tech", "receptionist"],
+    },
+    {
+      title: "Tickets",
+      url: "/tickets",
+      icon: Ticket,
+      roles: ["system_admin", "hospital_admin", "admin", "doctor", "nurse"],
+    },
+    {
+      title: "Patient Assignments",
+      url: "/patient-assignments",
+      icon: UserCheck,
+      roles: ["system_admin", "hospital_admin"],
+    },
+    {
+      title: "Departments & Teams",
+      url: "/departments-teams",
+      icon: Building2,
+      roles: ["system_admin", "hospital_admin"],
+    },
+    {
+      title: "AI Clinical Assistant",
+      url: "/patients",
+      icon: Brain,
+      roles: ["doctor"],
     },
     {
       title: "Patients",
@@ -97,6 +150,10 @@ export function AppSidebar() {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
+      case "system_admin":
+        return "bg-purple-600 text-white";
+      case "hospital_admin":
+        return "bg-blue-600 text-white";
       case "admin":
         return "bg-destructive text-destructive-foreground";
       case "doctor":

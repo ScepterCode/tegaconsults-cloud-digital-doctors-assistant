@@ -1,0 +1,38 @@
+# Digital Doctors Assistant - Sample Credentials
+
+## System Administrator
+- Username: admin
+- Password: paypass
+- Role: system_admin (updated from 'admin')
+- Expected Route: /system-admin
+
+## Doctor
+- Username: doctor1
+- Password: pass123
+- Role: doctor
+- Expected Route: /dashboard
+
+## Nurse
+- Username: nurse1
+- Password: nursepass
+- Role: nurse
+- Expected Route: /dashboard
+
+## Patient
+- Username: patient
+- Password: paypass
+- Role: patient
+- Expected Route: /dashboard
+
+---
+
+## Role-Based Routing Summary:
+- system_admin → /system-admin (System Admin Dashboard with 6 tabs)
+- hospital_admin → /hospital-admin (Hospital specific dashboard)
+- All other roles (doctor, nurse, patient, etc.) → /dashboard (General dashboard)
+
+## Testing Instructions:
+1. Navigate to http://localhost:5173
+2. Click "Sign In"
+3. Enter credentials from above
+4. Verify correct dashboard loads based on role

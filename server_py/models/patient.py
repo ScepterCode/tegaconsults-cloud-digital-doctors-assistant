@@ -28,5 +28,8 @@ class Patient(Base):
     fingerprint_data = Column(String, nullable=True)
     registered_by = Column(String, nullable=False)
     last_updated_by = Column(String, nullable=True)
+    assigned_doctor_id = Column(String, nullable=True)  # Doctor assigned to this patient
+    hospital_id = Column(String, nullable=True)  # Hospital the patient belongs to
+    department_id = Column(String, nullable=True)  # Department the patient is in
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

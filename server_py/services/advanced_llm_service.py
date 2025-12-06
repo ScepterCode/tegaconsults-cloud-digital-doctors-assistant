@@ -1,23 +1,17 @@
 from typing import Dict, List, Any, Optional
 import os
+import requests
 
-try:
-    from openai import OpenAI
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    OpenAI = None
+OPENAI_AVAILABLE = True
 
 class AdvancedLLMService:
     def __init__(self):
-        self.client = None
-        if OPENAI_AVAILABLE:
-            api_key = os.getenv("OPENAI_API_KEY")
-            if api_key:
-                self.client = OpenAI(api_key=api_key)
+        self.api_key = os.getenv("OPENAI_API_KEY")
+        self.api_url = "https://api.openai.com/v1/chat/completions"
+        self.model = "gpt-4o-mini"
     
     def is_available(self) -> bool:
-        return self.client is not None
+        return self.api_key is not None
     
     async def get_drug_alternatives(self, drug_name: str, reason: str) -> Dict[str, Any]:
         if not self.is_available():
@@ -36,20 +30,16 @@ Please provide:
    - Typical dosage
    - Key considerations"""
 
-            response = self.client.chat.completions.create(
-                model="gpt-4",
+            headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}; data = {"model": self.model,
                 messages=[
                     {"role": "system", "content": "You are a clinical pharmacology expert providing drug alternative recommendations."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=800,
                 temperature=0.3
-            )
-            
-            return {
-                "originalDrug": drug_name,
+            }; response = requests.post(self.api_url, headers=headers, json=data, timeout=30); response.raise_for_status(); return {"originalDrug": drug_name,
                 "reason": reason,
-                "alternatives": response.choices[0].message.content,
+                "alternatives": response.json()["choices"][0]["message"]["content"],
                 "status": "success"
             }
         except Exception as e:
@@ -78,19 +68,15 @@ Please provide:
 5. Warning signs to watch for
 6. Expected outcomes"""
 
-            response = self.client.chat.completions.create(
-                model="gpt-4",
+            headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}; data = {"model": self.model,
                 messages=[
                     {"role": "system", "content": "You are a clinical treatment planning specialist."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=1000,
                 temperature=0.3
-            )
-            
-            return {
-                "diagnosis": diagnosis,
-                "treatmentPlan": response.choices[0].message.content,
+            }; response = requests.post(self.api_url, headers=headers, json=data, timeout=30); response.raise_for_status(); return {"diagnosis": diagnosis,
+                "treatmentPlan": response.json()["choices"][0]["message"]["content"],
                 "status": "success"
             }
         except Exception as e:
@@ -118,18 +104,14 @@ Please provide:
 4. Factors that may improve outcomes
 5. Monitoring recommendations"""
 
-            response = self.client.chat.completions.create(
-                model="gpt-4",
+            headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}; data = {"model": self.model,
                 messages=[
                     {"role": "system", "content": "You are a clinical outcomes prediction specialist."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=600,
                 temperature=0.3
-            )
-            
-            return {
-                "prediction": response.choices[0].message.content,
+            }; response = requests.post(self.api_url, headers=headers, json=data, timeout=30); response.raise_for_status(); return {"prediction": response.json()["choices"][0]["message"]["content"],
                 "successRate": 0.75,
                 "status": "success"
             }
@@ -178,19 +160,15 @@ Please provide:
             try:
                 prompt = f"Provide evidence-based clinical guidelines for managing {condition}. Include diagnostic criteria, treatment recommendations, and follow-up care."
                 
-                response = self.client.chat.completions.create(
-                    model="gpt-4",
+                headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}; data = {"model": self.model,
                     messages=[
                         {"role": "system", "content": "You are a clinical guidelines specialist providing evidence-based recommendations."},
                         {"role": "user", "content": prompt}
                     ],
                     max_tokens=600,
                     temperature=0.3
-                )
-                
-                return {
-                    "condition": condition,
-                    "guidelines": response.choices[0].message.content,
+                }; response = requests.post(self.api_url, headers=headers, json=data, timeout=30); response.raise_for_status(); return {"condition": condition,
+                    "guidelines": response.json()["choices"][0]["message"]["content"],
                     "status": "success"
                 }
             except Exception:
@@ -222,3 +200,4 @@ Please provide:
             "successRate": None,
             "status": "fallback"
         }
+

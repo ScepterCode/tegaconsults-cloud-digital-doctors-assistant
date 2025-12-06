@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/lib/auth-context";
+import { getRoleBasedDashboard } from "@/lib/navigation";
 import { loginSchema, type LoginCredentials } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -87,12 +88,17 @@ export default function Login() {
       return await res.json();
     },
     onSuccess: (data) => {
+      console.log("Login successful! User data:", data.user);
+      console.log("User role:", data.user.role);
       login(data.user);
       toast({
         title: "Login Successful",
         description: `Welcome back, ${data.user.fullName}!`,
       });
-      setLocation("/dashboard");
+      // Redirect based on user role
+      const dashboardRoute = getRoleBasedDashboard(data.user.role);
+      console.log("Calculated dashboard route:", dashboardRoute);
+      setLocation(dashboardRoute);
     },
     onError: (error: Error) => {
       toast({
@@ -405,9 +411,9 @@ export default function Login() {
             </div>
 
             <div className="flex gap-2">
-              <Button 
+              <Button
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => handleBiometricCapture(biometricType)} 
+                onClick={() => handleBiometricCapture(biometricType)}
                 data-testid="button-complete-biometric"
                 disabled={loginMutation.isPending}
               >
