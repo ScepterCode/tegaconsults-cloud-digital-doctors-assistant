@@ -1,0 +1,753 @@
+{
+  "id": "4a4bf4c6-d637-4118-96c4-206928b319dd",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.appointments": {
+      "name": "appointments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "doctor_id": {
+          "name": "doctor_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appointment_date": {
+          "name": "appointment_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'pending'"
+        },
+        "notes": {
+          "name": "notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_amount": {
+          "name": "payment_amount",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 1000
+        },
+        "payment_status": {
+          "name": "payment_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'pending'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.departments": {
+      "name": "departments",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "hospital_admin_id": {
+          "name": "hospital_admin_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "description": {
+          "name": "description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "head_staff_id": {
+          "name": "head_staff_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'active'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.lab_results": {
+      "name": "lab_results",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "test_name": {
+          "name": "test_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "test_category": {
+          "name": "test_category",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_data": {
+          "name": "file_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_type": {
+          "name": "file_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "test_values": {
+          "name": "test_values",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "normal_range": {
+          "name": "normal_range",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "automated_analysis": {
+          "name": "automated_analysis",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "doctor_notes": {
+          "name": "doctor_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "recommendations": {
+          "name": "recommendations",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "uploaded_by": {
+          "name": "uploaded_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "uploaded_at": {
+          "name": "uploaded_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "reviewed_by": {
+          "name": "reviewed_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.notifications": {
+      "name": "notifications",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "department_id": {
+          "name": "department_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "patient_id": {
+          "name": "patient_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "appointment_id": {
+          "name": "appointment_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "message": {
+          "name": "message",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "priority": {
+          "name": "priority",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'normal'"
+        },
+        "requested_by": {
+          "name": "requested_by",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unread'"
+        },
+        "action_data": {
+          "name": "action_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.patients": {
+      "name": "patients",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "mrn": {
+          "name": "mrn",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "age": {
+          "name": "age",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "gender": {
+          "name": "gender",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone_number": {
+          "name": "phone_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nin": {
+          "name": "nin",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "blood_group": {
+          "name": "blood_group",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "genotype": {
+          "name": "genotype",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "allergies": {
+          "name": "allergies",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "symptoms": {
+          "name": "symptoms",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bp_systolic": {
+          "name": "bp_systolic",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bp_diastolic": {
+          "name": "bp_diastolic",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "temperature": {
+          "name": "temperature",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "heart_rate": {
+          "name": "heart_rate",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "weight": {
+          "name": "weight",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "facial_recognition_data": {
+          "name": "facial_recognition_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fingerprint_data": {
+          "name": "fingerprint_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "registered_by": {
+          "name": "registered_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_updated_by": {
+          "name": "last_updated_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "patients_mrn_unique": {
+          "name": "patients_mrn_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "mrn"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.subscriptions": {
+      "name": "subscriptions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "admin_user_id": {
+          "name": "admin_user_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tier": {
+          "name": "tier",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'free'"
+        },
+        "trial_start_date": {
+          "name": "trial_start_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "trial_end_date": {
+          "name": "trial_end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subscription_start_date": {
+          "name": "subscription_start_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subscription_end_date": {
+          "name": "subscription_end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "billing_cycle": {
+          "name": "billing_cycle",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'trial'"
+        },
+        "stripe_customer_id": {
+          "name": "stripe_customer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "stripe_subscription_id": {
+          "name": "stripe_subscription_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "subscriptions_admin_user_id_unique": {
+          "name": "subscriptions_admin_user_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "admin_user_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.users": {
+      "name": "users",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "password": {
+          "name": "password",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "full_name": {
+          "name": "full_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "hospital_admin_id": {
+          "name": "hospital_admin_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "department_id": {
+          "name": "department_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 1
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "users_username_unique": {
+          "name": "users_username_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "username"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
