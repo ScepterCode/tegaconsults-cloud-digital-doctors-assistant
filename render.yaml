@@ -5,8 +5,24 @@ services:
     env: python
     region: oregon
     plan: free
-    buildCommand: "cd server_py && pip install -r ../requirements.txt"
-    startCommand: "uvicorn server_py.main:app --host 0.0.0.0 --port $PORT"
+    buildCommand: services:
+  - type: web
+    name: dda-backend
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn server_py.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dda-database
+          property: connectionString
+    startCommand: "gunicorn server_py.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.0
