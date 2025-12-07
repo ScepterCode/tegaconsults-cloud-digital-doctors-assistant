@@ -1,5 +1,5 @@
 services:
-  # Python FastAPI Backend (Main API) - Updated for static frontend
+  # Python FastAPI Backend - Serves both API and Frontend
   - type: web
     name: dda-backend
     env: python
@@ -12,15 +12,6 @@ services:
           property: connectionString
       - key: OPENAI_API_KEY
         sync: false
-
-  # React Frontend (Static Site)
-  - type: static
-    name: dda-frontend
-    buildCommand: "npm install && npm run build"
-    staticPublishPath: dist/public
-    envVars:
-      - key: VITE_API_URL
-        value: https://dda-backend.onrender.com
 
 databases:
   - name: dda-database

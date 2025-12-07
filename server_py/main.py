@@ -145,19 +145,39 @@ async def startup_event():
 def health_check():
     return {"status": "healthy", "service": "Digital Doctors Assistant", "version": "2.0.0", "backend": "Python/FastAPI"}
 
+# Serve frontend static files from dist/public
 dist_path = os.path.join(os.path.dirname(__file__), "..", "dist", "public")
 if os.path.exists(dist_path):
+    # Mount static assets (CSS, JS, images)
     app.mount("/assets", StaticFiles(directory=os.path.join(dist_path, "assets")), name="assets")
     
+    # Serve favicon
+    @app.get("/favicon.png")
+    async def favicon():
+        favicon_path = os.path.join(dist_path, "favicon.png")
+        if os.path.exists(favicon_path):
+            return FileResponse(favicon_path)
+    
+    # Catch-all route for SPA - must be last
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
+        # Don't intercept API routes
         if full_path.startswith("api/"):
             return {"error": "Not found"}
         
+        # Try to serve the file if it exists
+        file_path = os.path.join(dist_path, full_path)
+        if os.path.isfile(file_path):
+            return FileResponse(file_path)
+        
+        # Otherwise serve index.html for SPA routing
         index_path = os.path.join(dist_path, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
+        
         return {"error": "Frontend not built"}
+else:
+    print(f"Warning: Frontend dist folder not found at {dist_path}")
 
 if __name__ == "__main__":
     import uvicorn

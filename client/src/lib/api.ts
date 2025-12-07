@@ -1,7 +1,8 @@
 // API Configuration for Python FastAPI Backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Use relative paths when served from same domain, or explicit URL for local dev
+const API_URL = import.meta.env.VITE_API_URL || '';
 
-console.log('API URL:', API_URL);
+console.log('API URL:', API_URL || '(relative paths)');
 
 // Generic fetch wrapper with error handling
 async function apiFetch(endpoint: string, options: RequestInit = {}) {
