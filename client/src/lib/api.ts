@@ -1,7 +1,7 @@
 // API Configuration for Python FastAPI Backend
-const API_URL = import.meta.env.VITE_API_URL || '';
+const API_URL = import.meta.env.VITE_API_URL || 'https://tegaconsults-cloud-digital-doctors.onrender.com';
 
-console.log('🔗 API URL:', API_URL || '(relative paths)');
+console.log('🔗 API URL:', API_URL);
 console.log('🔧 VITE_API_URL env:', import.meta.env.VITE_API_URL);
 
 // Generic fetch wrapper with error handling
