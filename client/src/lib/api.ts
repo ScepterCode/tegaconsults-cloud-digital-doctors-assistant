@@ -31,7 +31,11 @@ export const authAPI = {
   login: (username: string, password: string) =>
     apiFetch('/api/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ username, password }),
+      body: JSON.stringify({ 
+        auth_method: 'credentials',
+        username, 
+        password 
+      }),
     }),
 
   logout: () =>
