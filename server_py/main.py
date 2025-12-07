@@ -48,8 +48,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://*.vercel.app",               # Vercel preview deployments
-        "https://your-app.vercel.app",        # Replace with your actual Vercel URL
+        "https://tegaconsults-cloud-digital-doctors-assistant-73yjebxwp.vercel.app",  # Your Vercel URL
+        "https://tegaconsults-cloud-digital-doctors-assistant.vercel.app",            # Production Vercel URL
         "http://localhost:5173",              # Local development
         "http://localhost:3000",              # Alternative local port
         "*"                                    # Allow all origins (for testing)
