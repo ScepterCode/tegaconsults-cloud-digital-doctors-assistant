@@ -1,19 +1,46 @@
+
 services:
-  # Python FastAPI Backend - Serves both API and Frontend
+  # Backend API
   - type: web
     name: dda-backend
     env: python
-    buildCommand: "ls -la && pip install -r ./requirements.txt"
-    startCommand: "gunicorn server_py.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120"
+    region: oregon
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn server_py.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT"
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: OPENAI_API_KEY
+        sync: false
       - key: DATABASE_URL
         fromDatabase:
           name: dda-database
           property: connectionString
-      - key: OPENAI_API_KEY
-        sync: false
+    healthCheckPath: /api/health
+
+  # Frontend
+  - type: web
+    name: dda-frontend
+    env: node
+    region: oregon
+    plan: free
+    rootDir: client
+    buildCommand: "npm install && npm run build && npm run db:push"
+    startCommand: "node ../dist/index.js"
+    envVars:
+      - key: VITE_API_URL
+        value: https://tegaconsults-cloud-digital-doctors.onrender.com
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: dda-database
+          property: connectionString
+    healthCheckPath: /
 
 databases:
   - name: dda-database
     databaseName: digital_doctors
     user: dda_user
+    plan: free
