@@ -3,8 +3,7 @@ services:
   - type: web
     name: dda-backend
     env: python
-    rootDir: .
-    buildCommand: "pip install -r requirements.txt"
+    buildCommand: "ls -la && pip install -r ./requirements.txt"
     startCommand: "gunicorn server_py.main:app --workers 2 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT --timeout 120"
     envVars:
       - key: DATABASE_URL
