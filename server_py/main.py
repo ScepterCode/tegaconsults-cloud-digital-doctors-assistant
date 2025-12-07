@@ -48,15 +48,15 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://tegaconsults-cloud-digital-doctors-assistant-73yjebxwp.vercel.app",  # Your Vercel URL
+        "https://tegaconsults-cloud-digital-doctors-assistant-73yjebxwp.vercel.app",  # Your Vercel preview URL
         "https://tegaconsults-cloud-digital-doctors-assistant.vercel.app",            # Production Vercel URL
-        "http://localhost:5173",              # Local development
-        "http://localhost:3000",              # Alternative local port
-        "*"                                    # Allow all origins (for testing)
+        "https://tegaconsults-cloud-digital-doctors-assistant-4bfl8txqa.vercel.app",  # Another Vercel deployment
+        "http://localhost:5173",              # Local development (Vite)
+        "http://localhost:3000",              # Local development (alternative)
     ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Explicit methods including OPTIONS
+    allow_headers=["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
 )
 
 app.include_router(auth_router)
