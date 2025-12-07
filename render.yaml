@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: dda-backend
+    name: tegaconsults-cloud-digital-doctors-assistant
     env: python
     region: oregon
     plan: free
