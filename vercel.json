@@ -1,0 +1,14 @@
+{
+  "buildCommand": "cd client && npm install && npm run build",
+  "outputDirectory": "dist/public",
+  "framework": "vite",
+  "env": {
+    "VITE_API_URL": "https://dda-backend.onrender.com"
+  },
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
