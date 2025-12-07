@@ -16,8 +16,8 @@ services:
   # React Frontend (Static Site)
   - type: static
     name: dda-frontend
-    buildCommand: "cd client && npm install && npm run build"
-    staticPublishPath: client/dist
+    buildCommand: "npm install && npm run build"
+    staticPublishPath: dist/public
     envVars:
       - key: VITE_API_URL
         value: https://dda-backend.onrender.com
