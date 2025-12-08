@@ -48,11 +48,14 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "https://tegaconsults-cloud-digital-doctors-assistant-73yjebxwp.vercel.app",  # Your Vercel preview URL
-        "https://tegaconsults-cloud-digital-doctors-assistant.vercel.app",            # Production Vercel URL
-        "https://tegaconsults-cloud-digital-doctors-assistant-4bfl8txqa.vercel.app",  # Another Vercel deployment
-        "http://localhost:5173",              # Local development (Vite)
-        "http://localhost:3000",              # Local development (alternative)
+        # "https://tegaconsults-cloud-digital-doctors-assistant-73yjebxwp.vercel.app",  # Your Vercel preview URL
+        # "https://tegaconsults-cloud-digital-doctors-assistant.vercel.app",            # Production Vercel URL
+        # "https://tegaconsults-cloud-digital-doctors-assistant-4bfl8txqa.vercel.app",  # Another Vercel deployment
+        # "http://localhost:5173",              # Local development (Vite)
+        # "http://localhost:3000",  
+        "https://tegaconsults-cloud-digital-doctors-2ev0.onrender.com",  # ← THIS IS YOUR CURRENT FRONTEND
+        "http://localhost:5173",
+        "http://localhost:3000"# Local development (alternative)
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Explicit methods including OPTIONS
@@ -147,38 +150,38 @@ def health_check():
     return {"status": "healthy", "service": "Digital Doctors Assistant", "version": "2.0.0", "backend": "Python/FastAPI"}
 
 # Serve frontend static files from dist/public
-dist_path = os.path.join(os.path.dirname(__file__), "..", "dist", "public")
-if os.path.exists(dist_path):
-    # Mount static assets (CSS, JS, images)
-    app.mount("/assets", StaticFiles(directory=os.path.join(dist_path, "assets")), name="assets")
+# dist_path = os.path.join(os.path.dirname(__file__), "..", "dist", "public")
+# if os.path.exists(dist_path):
+#     # Mount static assets (CSS, JS, images)
+#     app.mount("/assets", StaticFiles(directory=os.path.join(dist_path, "assets")), name="assets")
     
-    # Serve favicon
-    @app.get("/favicon.png")
-    async def favicon():
-        favicon_path = os.path.join(dist_path, "favicon.png")
-        if os.path.exists(favicon_path):
-            return FileResponse(favicon_path)
+#     # Serve favicon
+#     @app.get("/favicon.png")
+#     async def favicon():
+#         favicon_path = os.path.join(dist_path, "favicon.png")
+#         if os.path.exists(favicon_path):
+#             return FileResponse(favicon_path)
     
-    # Catch-all route for SPA - must be last
-    @app.get("/{full_path:path}")
-    async def serve_spa(full_path: str):
-        # Don't intercept API routes
-        if full_path.startswith("api/"):
-            return {"error": "Not found"}
+#     # Catch-all route for SPA - must be last
+#     @app.get("/{full_path:path}")
+#     async def serve_spa(full_path: str):
+#         # Don't intercept API routes
+#         if full_path.startswith("api/"):
+#             return {"error": "Not found"}
         
-        # Try to serve the file if it exists
-        file_path = os.path.join(dist_path, full_path)
-        if os.path.isfile(file_path):
-            return FileResponse(file_path)
+#         # Try to serve the file if it exists
+#         file_path = os.path.join(dist_path, full_path)
+#         if os.path.isfile(file_path):
+#             return FileResponse(file_path)
         
-        # Otherwise serve index.html for SPA routing
-        index_path = os.path.join(dist_path, "index.html")
-        if os.path.exists(index_path):
-            return FileResponse(index_path)
+#         # Otherwise serve index.html for SPA routing
+#         index_path = os.path.join(dist_path, "index.html")
+#         if os.path.exists(index_path):
+#             return FileResponse(index_path)
         
-        return {"error": "Frontend not built"}
-else:
-    print(f"Warning: Frontend dist folder not found at {dist_path}")
+#         return {"error": "Frontend not built"}
+# else:
+#     print(f"Warning: Frontend dist folder not found at {dist_path}")
 
 if __name__ == "__main__":
     import uvicorn
