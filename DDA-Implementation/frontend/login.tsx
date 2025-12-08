@@ -83,21 +83,32 @@ export default function Login() {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginCredentials) => {
-      const res = await apiRequest("POST", "/api/auth/login", data);
-      return await res.json();
+      // FIXED: Correct endpoint → /api/login (not /api/auth/login)
+      const res = await apiRequest("POST", "/api/login", data);
+
+      // Better error handling to prevent "unexpected end of JSON input"
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `Login failed: ${res.status} ${res.statusText}`);
+      }
+
+      const json = await res.json();
+      return json;
     },
     onSuccess: (data) => {
       login(data.user);
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${data.user.fullName}!`,
+        description: `Welcome back, ${data.user.fullName || data.user.username}!`,
       });
       setLocation("/dashboard");
     },
     onError: (error: Error) => {
       toast({
         title: "Login Failed",
-        description: error.message,
+        description: error.message.includes("Unexpected") 
+          ? "Server error. Please try again later." 
+          : error.message,
         variant: "destructive",
       });
     },
@@ -154,7 +165,6 @@ export default function Login() {
             Revolutionary healthcare management system with biometric authentication, AI-powered diagnostics, and secure patient record management.
           </p>
         </div>
-
         {/* CTA Buttons */}
         <div className="flex gap-4 mb-16">
           <Button
@@ -175,7 +185,6 @@ export default function Login() {
             Sign In
           </Button>
         </div>
-
         {/* Features Grid */}
         <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((feature, index) => {
@@ -210,7 +219,6 @@ export default function Login() {
               Access your account with secure authentication methods
             </DialogDescription>
           </DialogHeader>
-
           <div className="space-y-6">
             {authMethod === "credentials" && (
               <Form {...form}>
@@ -236,7 +244,6 @@ export default function Login() {
                       </FormItem>
                     )}
                   />
-
                   <FormField
                     control={form.control}
                     name="password"
@@ -259,7 +266,6 @@ export default function Login() {
                       </FormItem>
                     )}
                   />
-
                   <Button
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-700"
@@ -268,7 +274,6 @@ export default function Login() {
                   >
                     {loginMutation.isPending ? "Signing in..." : "Sign In"}
                   </Button>
-
                   <div className="text-center text-sm">
                     <Button
                       type="button"
@@ -283,7 +288,6 @@ export default function Login() {
                 </form>
               </Form>
             )}
-
             {authMethod === "nin" && (
               <div className="space-y-4">
                 <div>
@@ -306,7 +310,6 @@ export default function Login() {
                 </Button>
               </div>
             )}
-
             <div className="relative my-2">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
@@ -317,7 +320,6 @@ export default function Login() {
                 </span>
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-2">
               <Button
                 type="button"
@@ -360,11 +362,11 @@ export default function Login() {
                 Fingerprint
               </Button>
             </div>
-
             <div className="bg-muted p-3 rounded-md space-y-2">
               <p className="text-xs font-medium text-muted-foreground">Demo Credentials:</p>
               <div className="space-y-1 text-xs font-mono">
-                <p>doctor1 / pass123</p>
+                <p>Username: doctor1</p>
+                <p>Password: pass123</p>
               </div>
             </div>
           </div>
@@ -384,7 +386,6 @@ export default function Login() {
                 : "Place your finger on the scanner"}
             </DialogDescription>
           </DialogHeader>
-
           <div className="flex flex-col items-center justify-center py-8 space-y-6">
             {biometricType === "facial" ? (
               <div className="relative w-full max-w-md aspect-video bg-muted rounded-lg flex items-center justify-center">
@@ -396,18 +397,16 @@ export default function Login() {
                 <Fingerprint className="h-32 w-32 text-muted-foreground animate-pulse" />
               </div>
             )}
-
             <div className="text-center space-y-2">
               <p className="text-sm font-medium">Scanning...</p>
               <p className="text-xs text-muted-foreground">
                 This is a demonstration interface. Biometric hardware integration required.
               </p>
             </div>
-
             <div className="flex gap-2">
-              <Button 
+              <Button
                 className="bg-blue-600 hover:bg-blue-700"
-                onClick={() => handleBiometricCapture(biometricType)} 
+                onClick={() => handleBiometricCapture(biometricType)}
                 data-testid="button-complete-biometric"
                 disabled={loginMutation.isPending}
               >
