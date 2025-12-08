@@ -8,6 +8,10 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
+# Get frontend URL from environment variable
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+RENDER_PREVIEW_URL = os.getenv("RENDER_EXTERNAL_URL")
+
 from server_py.api.auth import router as auth_router
 from server_py.api.patients import router as patients_router
 from server_py.api.appointments import router as appointments_router
@@ -47,16 +51,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        # "https://tegaconsults-cloud-digital-doctors-assistant-73yjebxwp.vercel.app",  # Your Vercel preview URL
-        # "https://tegaconsults-cloud-digital-doctors-assistant.vercel.app",            # Production Vercel URL
-        # "https://tegaconsults-cloud-digital-doctors-assistant-4bfl8txqa.vercel.app",  # Another Vercel deployment
-        # "http://localhost:5173",              # Local development (Vite)
-        # "http://localhost:3000",  
-        "https://tegaconsults-cloud-digital-doctors-2ev0.onrender.com",  # ← THIS IS YOUR CURRENT FRONTEND
+    allow_origins=[origin for origin in [
+        FRONTEND_URL,
         "http://localhost:5173",
-        "http://localhost:3000"# Local development (alternative)
-    ],
+        "http://localhost:3000",
+        RENDER_PREVIEW_URL,
+    ] if origin],  # Filter out None values
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],  # Explicit methods including OPTIONS
     allow_headers=["*"],
